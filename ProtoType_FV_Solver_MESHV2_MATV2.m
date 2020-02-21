@@ -5,8 +5,8 @@ clear;
 %domein insluiten
 VH = 10; VB = 10; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 rng(500); %Reproduceerbaarheid
-%Varray = rand(VB,VH);
-Varray = 0.5*ones(VB,VH);
+Varray = rand(VB,VH);
+%Varray = 0.5*ones(VB,VH);
 [Sol,K] = FVM(VB,VH,Varray);
 % Best niet veel hoger dan 125 --> of spaarse matrices gebruiken
 
@@ -18,29 +18,29 @@ xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 
 %Benaderen Jacobiaan
 J = FD_J(VB,VH,Varray);
-G_FD = ones(1,VB*VH)*J';
+%G_FD = ones(1,VB*VH)*J';
 G_FDT = ones(1,VB*VH)*J;%Of moet dit J transpose zijn?
 
 %Adjoint
 L = (K')\-ones(VB*VH,1);
 AG = Adjoint_Gradient(VB,VH,Varray,L,Sol);
 
-norm(AG-G_FD) %wss fout
+%norm(AG-G_FD) %wss fout
 norm(AG-G_FDT)
 
-ERR1 = reshape(AG-G_FD,[VB,VH]);
+%ERR1 = reshape(AG-G_FD,[VB,VH]);
 ERR2 = reshape(AG-G_FDT,[VB,VH]);
 
-figure(2)
-subplot(1,3,1); title("G_FD");
-surf(reshape(G_FD,[VB,VH])); 
-subplot(1,3,2)
-surf(ERR1); title("ERR1");
-xlabel("X"); ylabel("Y"); zlabel("ERROR1")
-subplot(1,3,3)
-surf(reshape(AG,[VB,VH])); 
+% figure(2)
+% subplot(1,3,1); title("G_FD");
+% surf(reshape(G_FD,[VB,VH])); 
+% subplot(1,3,2)
+% surf(ERR1); title("ERR1");
+% xlabel("X"); ylabel("Y"); zlabel("ERROR1")
+% subplot(1,3,3)
+% surf(reshape(AG,[VB,VH])); 
 
-figure(3);
+figure(2);
 subplot(1,3,1); title("G_FDT");
 surf(reshape(G_FDT,[VB,VH])); 
 subplot(1,3,2)
@@ -71,7 +71,7 @@ end
 function [Sol,K] = FVM(VB,VH,Varray)
 H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VB-1); dy = H/(VH-1); %Cell grotes
-q = 0;
+q = 200;
 Cmet = 65; %Metaal
 Cpla = 0.2; %Plastiek
 
@@ -239,7 +239,7 @@ for i = 1:VH
     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
 end
 %rechts
-T2 = 1000;
+T2 = 0;
 for i = 1:VH
     k = i*VB;
     %K(k,:) = zeros(1,VB*VH); 
@@ -396,7 +396,7 @@ for i = 1:VH*VB
     G(:,i) = G(:,i) + R(:,:,i)*SOL;
 end
 
-AG = -L'*G';
+AG = L'*G;
 end
 
 
