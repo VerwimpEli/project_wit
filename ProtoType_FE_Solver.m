@@ -101,6 +101,5 @@ end
 
 %%Functies
 function R = calcR(xksi,eta) %vanuit oefenzitten NMM
-    % tegenwijzerzin%R = 1/4*[[-(1-eta);-(1-xksi)],[(1-eta);-(1+xksi)],[(1+eta);(1+xksi)],[-(1+eta);(1-xksi)]]; %Mogelijks niet in de juiste volgorde
     R = 1/4*[[-(1-eta);-(1-xksi)],[-(1+eta);(1-xksi)],[(1+eta);(1+xksi)],[(1-eta);-(1+xksi)]]; %Mogelijks niet in de juiste volgorde
 end
