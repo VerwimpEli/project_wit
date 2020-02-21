@@ -28,24 +28,15 @@ AG = Adjoint_Gradient(VB,VH,Varray,L,Sol);
 %norm(AG-G_FD) %wss fout
 norm(AG-G_FDT)
 
-%ERR1 = reshape(AG-G_FD,[VB,VH]);
-ERR2 = reshape(AG-G_FDT,[VB,VH]);
+ERR1 = reshape(AG-G_FDT,[VB,VH]);
 
-% figure(2)
-% subplot(1,3,1); title("G_FD");
-% surf(reshape(G_FD,[VB,VH])); 
-% subplot(1,3,2)
-% surf(ERR1); title("ERR1");
-% xlabel("X"); ylabel("Y"); zlabel("ERROR1")
-% subplot(1,3,3)
-% surf(reshape(AG,[VB,VH])); 
 
 figure(2);
 subplot(1,3,1); title("G_FDT");
 surf(reshape(G_FDT,[VB,VH])); 
 subplot(1,3,2)
-surf(ERR2); title("ERR2");
-xlabel("X"); ylabel("Y"); zlabel("ERROR2")
+surf(ERR1); title("ERR1");
+xlabel("X"); ylabel("Y"); zlabel("ERROR1")
 subplot(1,3,3)
 surf(reshape(AG,[VB,VH])); 
 
@@ -276,8 +267,8 @@ MatArray = Cmet*Varray + Cpla*(ones(VB,VH)-Varray);
 
 %Rbeta
 R = zeros(VB*VH,VB*VH,VB*VH);%Zeer Spaarse Tensor
-K = zeros(VB*VH,VB*VH);
-G = zeros(VB*VH,VB*VH);
+K = sparse(VB*VH,VB*VH);
+G = sparse(VB*VH,VB*VH);
 
 %Stensil voor de inwendige punten 
 %Zowel temperatuur en materiaal state zijn cell centered
@@ -386,7 +377,7 @@ for j = 1:VH-1 %in hooghte
     R1 = dx/dy/4*(Cmet-Cpla); R2 = dx/dy/4*(Cmet-Cpla);
     %Vergelijking k
     R(k,k,k) = R(k,k,k) + R1; R(k,k+VB,k) = R(k,k+VB,k) - R2;
-    R(k,k,k+VB) = R(k,k,k+VB) + R1; K(k,k+VB,k+VB) = R(k,k+VB,k+VB) - R2;
+    R(k,k,k+VB) = R(k,k,k+VB) + R1; R(k,k+VB,k+VB) = R(k,k+VB,k+VB) - R2;
     %vergelijking k+VB
     R(k+VB,k,k) = R(k+VB,k,k) - R1; R(k+VB,k+VB,k) = R(k+VB,k+VB,k) + R2;
     R(k+VB,k,k+VB) = R(k+VB,k,k+VB) - R1; R(k+VB,k+VB,k+VB) = R(k+VB,k+VB,k+VB) + R2;
@@ -398,5 +389,3 @@ end
 
 AG = L'*G;
 end
-
-
