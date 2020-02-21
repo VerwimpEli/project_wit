@@ -5,8 +5,7 @@ clear;
 %domein insluiten
 VH = 10; VB = 10; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 rng(500); %Reproduceerbaarheid
-%Varray = rand(VB,VH);
-Varray = 0.5*ones(VB,VH);
+Varray = rand(VB,VH);
 [Sol,K] = FVM(VB,VH,Varray);
 % Best niet veel hoger dan 125 --> of spaarse matrices gebruiken
 
@@ -25,30 +24,23 @@ G_FDT = ones(1,VB*VH)*J;%Of moet dit J transpose zijn?
 L = (K')\-ones(VB*VH,1);
 AG = Adjoint_Gradient(VB,VH,Varray,L,Sol);
 
-norm(AG-G_FD) %wss fout
+norm(AG-G_FD)
 norm(AG-G_FDT)
 
 ERR1 = reshape(AG-G_FD,[VB,VH]);
 ERR2 = reshape(AG-G_FDT,[VB,VH]);
 
 figure(2)
-subplot(1,3,1); title("G_FD");
-surf(reshape(G_FD,[VB,VH])); 
-subplot(1,3,2)
-surf(ERR1); title("ERR1");
-xlabel("X"); ylabel("Y"); zlabel("ERROR1")
-subplot(1,3,3)
-surf(reshape(AG,[VB,VH])); 
+subplot(
+surf(reshape(AG-G_FDT,[VB,VH]);); 
 
 figure(3);
-subplot(1,3,1); title("G_FDT");
-surf(reshape(G_FDT,[VB,VH])); 
-subplot(1,3,2)
-surf(ERR2); title("ERR2");
-xlabel("X"); ylabel("Y"); zlabel("ERROR2")
-subplot(1,3,3)
-surf(reshape(AG,[VB,VH])); 
+surf(ERR1); 
+xlabel("X"); ylabel("Y"); zlabel("ERROR1")
 
+figure(4);
+surf(ERR2); 
+xlabel("X"); ylabel("Y"); zlabel("ERROR2")
 
 
 %%%Bereken van de gradient DMV Finite difference
@@ -396,7 +388,7 @@ for i = 1:VH*VB
     G(:,i) = G(:,i) + R(:,:,i)*SOL;
 end
 
-AG = -L'*G';
+AG = L'*G';
 end
 
 
