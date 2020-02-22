@@ -1,6 +1,9 @@
 % Initalize problem
 VW = 25;
 VH = 25; 
+Q  = 200;
+Cpla = 0.2;
+Cmet = 65;
 M  = 0.4;   % Metal to plastic ratio
 v  = rand(VW * VH, 1) * M;
 
@@ -20,13 +23,13 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 10;
+maxiter = 1;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 
 % Inital 
 v0 = v;
-[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH);
+[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla);
 
 % Loop
 while kktnorm > kkttol && iter < maxiter
@@ -41,7 +44,7 @@ while kktnorm > kkttol && iter < maxiter
     vold1 = v;
     v = vmma;
     
-    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH);
+    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla);
     
     % Check KKT conditions for optimality
     [residu,kktnorm,residumax] = ...
@@ -59,9 +62,9 @@ figure
 surf(v)
 
 % Inital temp
-tsol0 = FVM(VW, VH, reshape(v0, VW, VH));
+tsol0 = FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla);
 % Final temp
-tsol  = FVM(VW, VH, v);
+tsol  = FVM(VW, VH, v, Q, Cmet, Cpla);
 
 figure
 subplot(121);
