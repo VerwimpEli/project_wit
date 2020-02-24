@@ -1,4 +1,24 @@
-function [Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla)
+%De functie FVM, deze functie is de simulatie van de differentiaal
+%vergelijking zelf. De mesh is in overeenkomst met de paper over heat
+%topolisation/optimasation. elk volume heeft zijn eigen
+%materiaal(coefficent)
+%Inputs
+%VW --> Int,Aantal volumes in de breedte/width richting
+%VH --> Int,aantal volumes in de hoogste
+%v --> materiaal matrix Real \in R(VW x VH) met waarden tussen 0 - 1
+%q --> uniforme warmte productie per m^2
+%Cmet --> coefficient van het metaal (de 1 in de v)
+%Cpla --> coefficient van het plastiek (de 0 in de v)
+%BC0,BC1,BC2,BC3 --> bijvoorbeeld
+%BC0 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Onder geisoleerde rand
+%BC1 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]]; % Rechter 
+%BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
+%BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker 
+% met 'N' neumann, en 'D' diriclet. gevolgd door de 2 indexen van de
+% volumes en de vierde en laatste waarde in de rij is waarde van de BC
+% zelf.
+
+function [Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3)
 H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
@@ -121,57 +141,57 @@ end
 %      k = VH*VB;
 %      RHS(k) = RHS(k) + C1;
 
-%Boven rand
-DT3 = 0;
-%Kleine Cell
-C1 = DT3*dx/2;
-k = 1+(VH-1)*VW;
-RHS(k) = RHS(k) + C1;
-%Gewone Grootte
-for i =2:VW-1
-    C1 = DT3*dx;
-    k = i+(VH-1)*VW;
-    RHS(k) = RHS(k) + C1;
-end
-%Kleine Cell
-C1 = DT3*dx/2;
-k = VH*VW;
-RHS(k) = RHS(k) + C1;
+% %Boven rand
+% DT3 = 0;
+% %Kleine Cell
+% C1 = DT3*dx/2;
+% k = 1+(VH-1)*VW;
+% RHS(k) = RHS(k) + C1;
+% %Gewone Grootte
+% for i =2:VW-1
+%     C1 = DT3*dx;
+%     k = i+(VH-1)*VW;
+%     RHS(k) = RHS(k) + C1;
+% end
+% %Kleine Cell
+% C1 = DT3*dx/2;
+% k = VH*VW;
+% RHS(k) = RHS(k) + C1;
 
 
-%Onderrand
-DT4 = 0;
-%Kleine Cell
-C1 = DT4*dx/2;
-k = 1;
-RHS(k) = RHS(k) + C1;
-%Gewone Grootte
-for i =2:VW-1
-    C1 = DT4*dx;
-    k = i;
-    RHS(k) = RHS(k) + C1;
-end
-%KleineCell
-C1 = DT4*dx/2;
-k = VW;
-RHS(k) = RHS(k) + C1;
+% %Onderrand
+% DT4 = 0;
+% %Kleine Cell
+% C1 = DT4*dx/2;
+% k = 1;
+% RHS(k) = RHS(k) + C1;
+% %Gewone Grootte
+% for i =2:VW-1
+%     C1 = DT4*dx;
+%     k = i;
+%     RHS(k) = RHS(k) + C1;
+% end
+% %KleineCell
+% C1 = DT4*dx/2;
+% k = VW;
+% RHS(k) = RHS(k) + C1;
 
 %%%%Diriclet
-PW= 10^8; %Penaltywaarde
-%links
-T1 = 0;
-for i = 1:VH
-    k = 1 + (i-1)*VW;
-    %K(k,:) = zeros(1,VB*VH); 
-    K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
-end
-%rechts
-T2 = 0;
-for i = 1:VH
-    k = i*VW;
-    %K(k,:) = zeros(1,VB*VH); 
-    K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T2*PW;
-end
+% PW= 10^8; %Penaltywaarde
+% %links
+% T1 = 0;
+% for i = 1:VH
+%     k = 1 + (i-1)*VW;
+%     %K(k,:) = zeros(1,VB*VH); 
+%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
+% end
+% %rechts
+% T2 = 0;
+% for i = 1:VH
+%     k = i*VW;
+%     %K(k,:) = zeros(1,VB*VH); 
+%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T2*PW;
+% end
 
 % %onder
 % T3 = 0;
@@ -185,6 +205,147 @@ end
 %     k = i + VB*(VH-1);
 %     K(k,:) = zeros(1,VB*VH); K(k,k) = 1;RHS(k) = T3;
 % end
+
+%%%%Boundary conditions onder
+PW= 10^8; %Penaltywaarde
+%Kleine Cell
+if BC0(1,1)=='D'
+       k = 1;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(1,4)*PW;
+else %Neumann   
+    C1 =  BC0(1,4)*dx/2;
+    k = 1;
+    RHS(k) = RHS(k) + C1;
+end
+%%Interne Cellen
+for i = 2:size(BC0,1)-1 
+    if BC0(i,1)=='D'
+        for j = BC0(i,2):BC0(i,3)
+            k = j;
+            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(i,4)*PW;
+        end
+    else %Neumann   
+        for j = BC0(i,2):BC0(i,3)
+        C1 =  BC0(i,4)*dx;
+        k = j;
+        RHS(k) = RHS(k) + C1;
+        end
+    end
+end
+%Eindcell
+if BC0(1,1)=='D' %diriclet
+       k = VW;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(size(BC0,1),4)*PW;
+else %Neumann   
+    C1 =  BC0(size(BC0,1),4)*dx/2;
+    k = VW;
+    RHS(k) = RHS(k) + C1;
+end
+
+%%%Boundary conditions Rechts %BC1
+%Kleine Cell
+if BC1(1,1)=='D'
+       k = VW;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(1,4)*PW;
+else %Neumann   
+    C1 =  BC1(1,4)*dx/2;
+    k = VW;
+    RHS(k) = RHS(k) + C1;
+end
+%%Interne Cellen
+for i = 2:size(BC1,1)-1 
+    if BC1(i,1)=='D'
+        for j = BC1(i,2):BC1(i,3)
+            k = j*VW;
+            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(i,4)*PW;
+        end
+    else %Neumann   
+        for j = BC1(i,2):BC1(i,3)
+            C1 =  BC1(i,4)*dx;
+            k = j*VW;
+            RHS(k) = RHS(k) + C1;
+        end
+    end
+end
+%Eindcell
+if BC1(1,1)=='D' %diriclet
+       k = VW*VH;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(size(BC1,1),4)*PW;
+else %Neumann   
+    C1 =  BC1(size(BC1,1),4)*dx/2;
+    k = VW*VH;
+    RHS(k) = RHS(k) + C1;
+end
+
+%%%Boundary conditions Boven %BC2
+%Kleine Cell
+if BC2(1,1)=='D'
+       k = 1+(VH-1)*VW;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(1,4)*PW;
+else %Neumann   
+    C1 =  BC2(1,4)*dx/2;
+    k = 1+(VH-1)*VW;
+    RHS(k) = RHS(k) + C1;
+end
+%%Interne Cellen
+for i = 2:size(BC2,1)-1 
+    if BC2(i,1)=='D'
+        for j = BC2(i,2):BC2(i,3)
+            k = j+(VH-1)*VW;
+            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(i,4)*PW;
+        end
+    else %Neumann   
+        for j = BC2(i,2):BC2(i,3)
+            C1 =  BC2(i,4)*dx;
+            k = j+(VH-1)*VW;
+            RHS(k) = RHS(k) + C1;
+        end
+    end
+end
+%Eindcell
+if BC2(1,1)=='D' %diriclet
+       k = VW*VH;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(size(BC2,1),4)*PW;
+else %Neumann   
+    C1 =  BC2(size(BC2,1),4)*dx/2;
+    k = VW*VH;
+    RHS(k) = RHS(k) + C1;
+end
+
+%%%Boundary conditions Links %BC3
+%Kleine Cell
+if BC3(1,1)=='D'
+       k = 1;
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(1,4)*PW;
+else %Neumann   
+    C1 =  BC3(1,4)*dx/2;
+    k = 1+(VH-1)*VW;
+    RHS(k) = RHS(k) + C1;
+end
+%%Interne Cellen
+for i = 2:size(BC3,1)-1 
+    if BC3(i,1)=='D'
+        for j = BC3(i,2):BC3(i,3)
+            k = 1 + (j-1)*VW;
+            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(i,4)*PW;
+        end
+    else %Neumann   
+        for j = BC3(i,2):BC3(i,3)
+            C1 =  BC3(i,4)*dx;
+            k = 1 + (j-1)*VW;
+            RHS(k) = RHS(k) + C1;
+        end
+    end
+end
+%Eindcell
+if BC3(1,1)=='D' %diriclet
+       k = 1+VW*(VH-1);
+       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(size(BC3,1),4)*PW;
+else %Neumann   
+    C1 =  BC3(size(BC3,1),4)*dx/2;
+    k = 1+VW*(VH-1);
+    RHS(k) = RHS(k) + C1;
+end
 
 %Oplossen Systeem
 Sol = K\RHS;
