@@ -145,21 +145,21 @@ end
 %      RHS(k) = RHS(k) + C1;
 
 %Boven rand
-DT3 = 0;
-%Kleine Cell
-C1 = DT3*dx/2;  % TODO 
-k = 1+(VH-1)*VW;
-RHS(k) = RHS(k) + C1;
-%Gewone Grootte
-for i =2:VW-1
-    C1 = DT3*dx;
-    k = i+(VH-1)*VW;
-    RHS(k) = RHS(k) + C1;
-end
-%Kleine Cell
-C1 = DT3*dx/2;
-k = VH*VW;
-RHS(k) = RHS(k) + C1;
+% DT3 = 0;
+% %Kleine Cell
+% C1 = DT3*dx/2;  % TODO 
+% k = 1+(VH-1)*VW;
+% RHS(k) = RHS(k) + C1;
+% %Gewone Grootte
+% for i =2:VW-1
+%     C1 = DT3*dx;
+%     k = i+(VH-1)*VW;
+%     RHS(k) = RHS(k) + C1;
+% end
+% %Kleine Cell
+% C1 = DT3*dx/2;
+% k = VH*VW;
+% RHS(k) = RHS(k) + C1;
 
 
 % %Onderrand
@@ -180,21 +180,21 @@ RHS(k) = RHS(k) + C1;
 % RHS(k) = RHS(k) + C1;
 
 %%%%Diriclet
-PW= 10^8; %Penaltywaarde
-%links
-T1 = 20;
-for i = 1:VH
-    k = 1 + (i-1)*VW;
-    %K(k,:) = zeros(1,VB*VH); 
-    K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
-end
-%rechts
-T2 = 20;
-for i = 1:VH
-    k = i*VW;
-    %K(k,:) = zeros(1,VB*VH); 
-    K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T2*PW;
-end
+% PW= 10^8; %Penaltywaarde
+% %links
+% T1 = 20;
+% for i = 1:VH
+%     k = 1 + (i-1)*VW;
+%     %K(k,:) = zeros(1,VB*VH); 
+%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
+% end
+% %rechts
+% T2 = 20;
+% for i = 1:VH
+%     k = i*VW;
+%     %K(k,:) = zeros(1,VB*VH); 
+%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T2*PW;
+% end
 
 % %onder
 % T3 = 0;
