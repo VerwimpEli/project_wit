@@ -1,9 +1,20 @@
 % Initalize problem
-VW = 25;
-VH = 25; 
+VW = 100;
+VH = 100; 
+Q  = 20000;
+Cpla = 0.2;
+Cmet = 65;
 M  = 0.4;   % Metal to plastic ratio
 v  = rand(VW * VH, 1) * M;
 
+% Boundary Conditions
+VDB = 0.3 * VH + 1;   % Dirichlet begin and end
+VDE = VH - 0.3 * VH;
+
+BC0 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Onder
+BC1 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Rechts 
+BC2 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Boven
+BC3 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Rechts 
 
 % Initialize MMA optimizer
 m       = 1;
@@ -26,7 +37,12 @@ kktnorm = 1.0;
 
 % Inital 
 v0 = v;
-[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH);
+[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+fvals = zeros(maxiter, 1);
+symm  = zeros(maxiter, 1);
+fvals(1) = f0val;
+symm(1)  = norm(reshape(v0, VW, VH) - flip(reshape(v0, VW, VH)), 'fro');
+
 
 % Loop
 while kktnorm > kkttol && iter < maxiter
@@ -41,7 +57,10 @@ while kktnorm > kkttol && iter < maxiter
     vold1 = v;
     v = vmma;
     
-    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH);
+    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+    fvals(iter) = f0val;
+    symm(iter)  = norm(reshape(v, VW, VH) - flip(reshape(v, VW, VH)), 'fro');
+    
     
     % Check KKT conditions for optimality
     [residu,kktnorm,residumax] = ...
@@ -56,21 +75,27 @@ end
 
 v = reshape(v, VW, VH);
 figure
-surf(v)
+imagesc(v)
+colorbar;
 
 % Inital temp
-tsol0 = FVM(VW, VH, reshape(v0, VW, VH));
+tsol0 = FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
 % Final temp
-tsol  = FVM(VW, VH, v);
+tsol  = FVM(VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+
+maxt = max(tsol0);
+mint = min(tsol0);
 
 figure
 subplot(121);
-surf(reshape(tsol0, VW, VH));
-caxis([0, 2.05]);
+imagesc(reshape(tsol0, VW, VH));
+caxis([273, maxt]);
+grid on
 
 subplot(122);
-surf(reshape(tsol, VW, VH));
-caxis([0, 2.05]);
+imagesc(reshape(tsol, VW, VH));
+caxis([273, maxt]);
+grid on
 
 colorbar;
 

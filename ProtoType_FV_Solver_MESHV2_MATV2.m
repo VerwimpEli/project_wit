@@ -3,7 +3,7 @@ clear;
 %Constanten %Mesh wordt volledig vierkant verondersteld %Speciale
 %Vierkanten aan de randen zodat de berekende temperaturen het volledige
 %domein insluiten
-VH = 10; VB = 10; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
+VH = 30; VB = 30; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 rng(500); %Reproduceerbaarheid
 Varray = rand(VB,VH);
 %Varray = 0.5*ones(VB,VH);
@@ -17,38 +17,32 @@ surf(SOL);
 xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 
 %Benaderen Jacobiaan
-J = FD_J(VB,VH,Varray);
+% J = FD_J(VB,VH,Varray);
 %G_FD = ones(1,VB*VH)*J';
-G_FDT = ones(1,VB*VH)*J;%Of moet dit J transpose zijn?
+% G_FDT = ones(1,VB*VH)*J;%Of moet dit J transpose zijn?
 
 %Adjoint
 L = (K')\-ones(VB*VH,1);
-AG = Adjoint_Gradient(VB,VH,Varray,L,Sol);
+% AG = Adjoint_Gradient(VB,VH,Varray,L,Sol);
+AG2 = Adjoint_Gradient2(VB,VH,Varray,L,Sol);
 
 %norm(AG-G_FD) %wss fout
-norm(AG-G_FDT)
+% norm(AG-AG2)
 
-%ERR1 = reshape(AG-G_FD,[VB,VH]);
-ERR2 = reshape(AG-G_FDT,[VB,VH]);
+% ERR1 = reshape(AG-AG2,[VB,VH]);
 
-% figure(2)
-% subplot(1,3,1); title("G_FD");
-% surf(reshape(G_FD,[VB,VH])); 
+
+figure(2);
+% subplot(1,3,1); 
+surf(reshape(AG2,[VB,VH])); 
+% title("AG2");
 % subplot(1,3,2)
-% surf(ERR1); title("ERR1");
+% surf(ERR1); 
+% title("ERR1");
 % xlabel("X"); ylabel("Y"); zlabel("ERROR1")
 % subplot(1,3,3)
 % surf(reshape(AG,[VB,VH])); 
-
-figure(2);
-subplot(1,3,1); title("G_FDT");
-surf(reshape(G_FDT,[VB,VH])); 
-subplot(1,3,2)
-surf(ERR2); title("ERR2");
-xlabel("X"); ylabel("Y"); zlabel("ERROR2")
-subplot(1,3,3)
-surf(reshape(AG,[VB,VH])); 
-
+% title("AG");
 
 
 %%%Bereken van de gradient DMV Finite difference
@@ -276,8 +270,9 @@ MatArray = Cmet*Varray + Cpla*(ones(VB,VH)-Varray);
 
 %Rbeta
 R = zeros(VB*VH,VB*VH,VB*VH);%Zeer Spaarse Tensor
-K = zeros(VB*VH,VB*VH);
-G = zeros(VB*VH,VB*VH);
+% R = sparse(VB*VH,VB*VH);
+K = sparse(VB*VH,VB*VH);
+G = sparse(VB*VH,VB*VH);
 
 %Stensil voor de inwendige punten 
 %Zowel temperatuur en materiaal state zijn cell centered
@@ -386,7 +381,7 @@ for j = 1:VH-1 %in hooghte
     R1 = dx/dy/4*(Cmet-Cpla); R2 = dx/dy/4*(Cmet-Cpla);
     %Vergelijking k
     R(k,k,k) = R(k,k,k) + R1; R(k,k+VB,k) = R(k,k+VB,k) - R2;
-    R(k,k,k+VB) = R(k,k,k+VB) + R1; K(k,k+VB,k+VB) = R(k,k+VB,k+VB) - R2;
+    R(k,k,k+VB) = R(k,k,k+VB) + R1; R(k,k+VB,k+VB) = R(k,k+VB,k+VB) - R2;
     %vergelijking k+VB
     R(k+VB,k,k) = R(k+VB,k,k) - R1; R(k+VB,k+VB,k) = R(k+VB,k+VB,k) + R2;
     R(k+VB,k,k+VB) = R(k+VB,k,k+VB) - R1; R(k+VB,k+VB,k+VB) = R(k+VB,k+VB,k+VB) + R2;
@@ -399,4 +394,123 @@ end
 AG = L'*G;
 end
 
+function AG = Adjoint_Gradient2(VB,VH,Varray,L,SOL)%moet synchroon blijven met Bovenstaande Methode
+H = 1; B = 1; %Hoogte en breedte van het domein
+dx = B/(VB-1); dy = H/(VH-1); %Cell grotes
+Cmet = 65; %Metaal
+Cpla = 0.2; %Plastiek
 
+G = sparse(VB*VH,VB*VH);
+
+%Stensil voor de inwendige punten 
+%Zowel temperatuur en materiaal state zijn cell centered
+%Verticale Faces
+
+R = sparse(VB*VH,VB*VH);
+for i = 1:VB-1 %in breedte
+   %Onder
+   k = i;
+   R1 = dy/dx/4*(Cmet-Cpla); R2 = dy/dx/4*(Cmet-Cpla);
+   
+   %Vergelijking k
+   R(k,k) = R(k,k) + R1; R(k,k+1) = R(k,k+1) - R2;
+   R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+   G(:,k) = G(:,k)+R*SOL;
+   R = sparse(VB*VH,VB*VH);
+   
+   %vergelijking k+1
+   R(k,k) = R(k,k) + R1; R(k,k+1) = R(k,k+1) - R2;
+   R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+   G(:,k+1) = G(:,k+1)+R*SOL;
+   R = sparse(VB*VH,VB*VH); 
+   
+   %Intern
+   for j = 2:VH-1 %in hooghte
+       k = i+VB*(j-1);
+       R1 = dy/dx/2*(Cmet-Cpla); R2 = dy/dx/2*(Cmet-Cpla);
+       
+       %Vergelijking k
+       R(k,k) = R(k,k) + R1; R(k,k+1) = R(k,k+1) - R2;
+       R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+       G(:,k) = G(:,k)+R*SOL;
+       R = sparse(VB*VH,VB*VH);
+       
+       %vergelijking k+1
+       R(k,k) = R(k,k) + R1;R(k,k+1) = R(k,k+1) - R2;
+       R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+       G(:,k+1) = G(:,k+1)+R*SOL;
+       R = sparse(VB*VH,VB*VH); 
+   end
+   
+   %Boven
+   k = i+VB*(VH-1);
+   R1 = dy/dx/4*(Cmet-Cpla); R2 = dy/dx/4*(Cmet-Cpla);
+
+   %Vergelijking k
+   R(k,k) = R(k,k) + R1; R(k,k+1) = R(k,k+1) - R2;
+   R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+   G(:,k) = G(:,k)+R*SOL;
+   R = sparse(VB*VH,VB*VH);
+
+   %vergelijking k+1
+   R(k,k) = R(k,k) + R1; R(k,k+1) = R(k,k+1) - R2;
+   R(k+1,k) = R(k+1,k) - R1; R(k+1,k+1) = R(k+1,k+1) + R2;
+   G(:,k+1) = G(:,k+1)+R*SOL;
+   R = sparse(VB*VH,VB*VH);
+end
+
+%Horizontale Faces
+for j = 1:VH-1 %in hooghte
+    %Links
+    k = 1+VB*(j-1);
+    R1 = dx/dy/4*(Cmet-Cpla); R2 = dx/dy/4*(Cmet-Cpla);
+    
+    %Vergelijking k
+    R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+    R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+    G(:,k) = G(:,k)+R*SOL;
+    R = sparse(VB*VH,VB*VH);
+    
+    %vergelijking k+VB
+    R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+    R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+    G(:,k+VB) = G(:,k+VB)+R*SOL;
+    R = sparse(VB*VH,VB*VH);
+    
+    %Intern
+    for i = 2:VB-1 %in breedte
+        k = i+VB*(j-1);
+        R1 = dx/dy/2*(Cmet-Cpla); R2 = dx/dy/2*(Cmet-Cpla);
+        
+        %Vergelijking k
+        R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+        R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+        G(:,k) = G(:,k)+R*SOL;
+        R = sparse(VB*VH,VB*VH);
+        
+        %vergelijking k+VB
+        R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+        R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+        G(:,k+VB) = G(:,k+VB)+R*SOL;
+        R = sparse(VB*VH,VB*VH);
+    end
+   
+    %Rechts
+    k = VB+VB*(j-1);
+    R1 = dx/dy/4*(Cmet-Cpla); R2 = dx/dy/4*(Cmet-Cpla);
+
+    %Vergelijking k
+    R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+    R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+    G(:,k) = G(:,k)+R*SOL;
+    R = sparse(VB*VH,VB*VH);
+    
+    %vergelijking k+VB
+    R(k,k) = R(k,k) + R1; R(k,k+VB) = R(k,k+VB) - R2;
+    R(k+VB,k) = R(k+VB,k) - R1; R(k+VB,k+VB) = R(k+VB,k+VB) + R2;
+    G(:,k+VB) = G(:,k+VB)+R*SOL;
+    R = sparse(VB*VH,VB*VH);
+end
+
+AG = L'*G;
+end
