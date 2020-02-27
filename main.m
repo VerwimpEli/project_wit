@@ -1,6 +1,6 @@
 % Initalize problem
-VW = 25;
-VH = 25; 
+VW = 50;
+VH = 50; 
 Q  = 200;
 Cpla = 0.2;
 Cmet = 65;
@@ -23,13 +23,18 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 1;
+maxiter = 200;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 
 % Inital 
 v0 = v;
 [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla);
+fvals = zeros(maxiter, 1);
+symm  = zeros(maxiter, 1);
+fvals(1) = f0val;
+symm(1)     = norm(reshape(v0, VW, VH) - flip(reshape(v0, VW, VH)), 'fro');
+
 
 % Loop
 while kktnorm > kkttol && iter < maxiter
@@ -45,6 +50,9 @@ while kktnorm > kkttol && iter < maxiter
     v = vmma;
     
     [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla);
+    fvals(iter) = f0val;
+    symm(iter)     = norm(reshape(v, VW, VH) - flip(reshape(v, VW, VH)), 'fro');
+    
     
     % Check KKT conditions for optimality
     [residu,kktnorm,residumax] = ...
@@ -59,21 +67,27 @@ end
 
 v = reshape(v, VW, VH);
 figure
-surf(v)
+imagesc(v)
+colorbar;
 
 % Inital temp
 tsol0 = FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla);
 % Final temp
 tsol  = FVM(VW, VH, v, Q, Cmet, Cpla);
 
+maxt = max(tsol0);
+mint = min(tsol0);
+
 figure
 subplot(121);
-surf(reshape(tsol0, VW, VH));
-caxis([0, 2.05]);
+imagesc(reshape(tsol0, VW, VH));
+caxis([mint, maxt]);
+grid on
 
 subplot(122);
-surf(reshape(tsol, VW, VH));
-caxis([0, 2.05]);
+imagesc(reshape(tsol, VW, VH));
+caxis([mint, maxt]);
+grid on
 
 colorbar;
 

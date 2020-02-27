@@ -6,7 +6,7 @@ dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 MatArray = Cmet*v + Cpla*(ones(VW,VH)-v);
 
 %Aanmaken van matrix en RHS
-K = zeros(VW*VH);
+K = sparse(VW*VH, VW*VH);
 RHS = ones(VW*VH,1);
 
 %temperatuursproductie in de cell
@@ -32,12 +32,15 @@ for i = 1:VW-1 %in breedte
    %Intern
    for j = 2:VH-1 %in hooghte
        M = (MatArray(i,j)+MatArray(i+1,j))/2;
-       C1 = M*dy/dx; C2 =M*dy/dx;
+       C1 = M*dy/dx; 
+       C2 =M*dy/dx;
        k = i+VW*(j-1);
        %Vergelijking k
-       K(k,k) = K(k,k) + C1; K(k,k+1) = K(k,k+1) - C2;
+       K(k,k) = K(k,k) + C1;
+       K(k,k+1) = K(k,k+1) - C2;
        %vergelijking k+1
-       K(k+1,k) = K(k+1,k) - C1; K(k+1,k+1) = K(k+1,k+1) + C2;
+       K(k+1,k) = K(k+1,k) - C1;
+       K(k+1,k+1) = K(k+1,k+1) + C2;
    end
    
    %Boven
@@ -124,7 +127,7 @@ end
 %Boven rand
 DT3 = 0;
 %Kleine Cell
-C1 = DT3*dx/2;
+C1 = DT3*dx/2;  % TODO 
 k = 1+(VH-1)*VW;
 RHS(k) = RHS(k) + C1;
 %Gewone Grootte
@@ -159,14 +162,14 @@ RHS(k) = RHS(k) + C1;
 %%%%Diriclet
 PW= 10^8; %Penaltywaarde
 %links
-T1 = 0;
+T1 = 20;
 for i = 1:VH
     k = 1 + (i-1)*VW;
     %K(k,:) = zeros(1,VB*VH); 
     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
 end
 %rechts
-T2 = 0;
+T2 = 20;
 for i = 1:VH
     k = i*VW;
     %K(k,:) = zeros(1,VB*VH); 
