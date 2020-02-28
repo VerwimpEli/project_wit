@@ -50,8 +50,8 @@ for i = 1:VB-1 %in breedte
    k = i+VB*(VH-1);
    
    M = (MatArray(i,VH)+MatArray(i+1,VH))/2;
-   R1 = M * dy/dx/4*(Cmet-Cpla);
-   R2 = M * dy/dx/4*(Cmet-Cpla);
+   R1 = M * dy/dx/4;
+   R2 = M * dy/dx/4;
    
    dg(k)   = dg(k) + R1 * SOL(k) - R2 * SOL(k+1);
    dg(k+1) = dg(k+1) - R1 * SOL(k) + R2 * SOL(k+1);
@@ -64,8 +64,8 @@ for j = 1:VH-1 %in hooghte
     k = 1+VB*(j-1);
     
     M = (MatArray(1,j)+MatArray(1,j+1))/2;
-    R1 = M * dy/dx/4*(Cmet-Cpla);
-    R2 = M * dy/dx/4*(Cmet-Cpla);
+    R1 = M * dy/dx/4;
+    R2 = M * dy/dx/4;
     
     dg(k)    = dg(k) + R1 * SOL(k) - R2 * SOL(k+VB);
     dg(k+VB) = dg(k+VB) - R1 * SOL(k) + R2 * SOL(k+VB);
@@ -75,8 +75,8 @@ for j = 1:VH-1 %in hooghte
     for i = 2:VB-1 %in breedte
         k = i+VB*(j-1);
         M = (MatArray(i,j)+MatArray(i,j+1))/2;
-        R1 = M * dx/dy/2*(Cmet-Cpla); 
-        R2 = M * dx/dy/2*(Cmet-Cpla);
+        R1 = M * dx/dy/2; 
+        R2 = M * dx/dy/2;
         
         dg(k)    = dg(k) + R1 * SOL(k) - R2 * SOL(k+VB);
         dg(k+VB) = dg(k+VB) - R1 * SOL(k) + R2 * SOL(k+VB);
@@ -87,8 +87,8 @@ for j = 1:VH-1 %in hooghte
     k = VB+VB*(j-1);
     
     M = (MatArray(VB,j)+MatArray(VB,j+1))/2;
-    R1 = M * dx/dy/4*(Cmet-Cpla); 
-    R2 = M * dx/dy/4*(Cmet-Cpla);
+    R1 = M * dx/dy/4; 
+    R2 = M * dx/dy/4;
     
     dg(k)    = dg(k) + R1 * SOL(k) - R2 * SOL(k+VB);
     dg(k+VB) = dg(k+VB) - R1 * SOL(k) + R2 * SOL(k+VB);
