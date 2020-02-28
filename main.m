@@ -1,20 +1,37 @@
 % Initalize problem
-VW = 100;
-VH = 100; 
-Q  = 20000;
+VW = 32;
+VH = 32; 
+Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
-M  = 0.4;   % Metal to plastic ratio
-v  = rand(VW * VH, 1) * M;
+M  = 0.2;   % Metal to plastic ratio
+% v  = rand(VW * VH, 1) * M;
+v = zeros(VW * VH, 1);
 
 % Boundary Conditions
 VDB = 0.3 * VH + 1;   % Dirichlet begin and end
 VDE = VH - 0.3 * VH;
 
+% Assignment 
+
 BC0 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Onder
 BC1 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Rechts 
 BC2 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Boven
-BC3 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Rechts 
+BC3 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Links 
+
+% Finite Volume paper
+% 
+% BC0 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Onder
+% BC1 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VH,VH,0]];    % Rechts 
+% BC2 = [['D',1,1,273]; ['D',2,VW-1,273]; ['D',VW,VW,273]];     % Boven
+% BC3 = [['D',1,1,273]; ['D',2,VW-1,273]; ['D',VW,VW,273]];    % Links 
+
+% BC0 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Onder
+% BC1 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VH,VH,0]];    % Rechts 
+% BC2 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Boven
+% sw = 2;
+% BC3 = [['N',1,1,0]; ['N',2,VW/2-sw-1,0]; ['D',VW/2-sw,VW/2+sw,293]; ...
+%        ['N',VW/2+sw+1, VW-1, 0]; ['N',VW,VW,0]];    % Links 
 
 % Initialize MMA optimizer
 m       = 1;
@@ -31,7 +48,7 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 10;
+maxiter = 500;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 
@@ -75,7 +92,7 @@ end
 
 v = reshape(v, VW, VH);
 figure
-imagesc(v)
+imagesc(flip(v'))
 colorbar;
 
 % Inital temp
@@ -88,16 +105,22 @@ mint = min(tsol0);
 
 figure
 subplot(121);
-imagesc(reshape(tsol0, VW, VH));
+imagesc(flip(reshape(tsol0, VW, VH)'));
 caxis([273, maxt]);
 grid on
 
 subplot(122);
-imagesc(reshape(tsol, VW, VH));
+imagesc(flip(reshape(tsol, VW, VH)'));
 caxis([273, maxt]);
 grid on
-
 colorbar;
+
+figure
+subplot(121);
+plot(fvals);
+subplot(122);
+plot(symm);
+
 
 
 
