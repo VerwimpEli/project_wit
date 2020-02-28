@@ -23,10 +23,16 @@ H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
-MatArray = Cmet*v + Cpla*(ones(VW,VH)-v);
+p = 5;
+MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet;
+% MatArray = Cmet*simpv + Cpla*(ones(VW,VH)-simpv);
 
 %Aanmaken van matrix en RHS
-K = sparse(VW*VH, VW*VH);
+% K = sparse(VW*VH, VW*VH);
+dg   = zeros(VW*VH, 1); % Diagonal
+sdg = zeros(VW*VH, 1);  % Subdiagonal
+vwdg = zeros(VW*VH, 1); % VB diagonal
+
 RHS = ones(VW*VH,1);
 
 %temperatuursproductie in de cell
@@ -41,26 +47,36 @@ RHS(VW:VW:VW*VH,1) = 1/2*RHS(VW:VW:VW*VH,1);%RechtseRij
 %Verticale Faces
 for i = 1:VW-1 %in breedte
    %Onder
-   M = (MatArray(i,1)+MatArray(i+1,1))/2;
+   M  = (MatArray(i,1)+MatArray(i+1,1))/2;
    C1 = M*dy/2/dx; C2 = M*dy/2/dx;
    k = i;
    %Vergelijking k
-   K(k,k) = K(k,k) + C1; K(k,k+1) = K(k,k+1) - C2;
-   %vergelijking k+1
-   K(k+1,k) = K(k+1,k) - C1; K(k+1,k+1) = K(k+1,k+1) + C2;
+%    K(k,k) = K(k,k) + C1; 
+%    K(k,k+1) = K(k,k+1) - C2;
+%    %vergelijking k+1
+%    K(k+1,k) = K(k+1,k) - C1; 
+%    K(k+1,k+1) = K(k+1,k+1) + C2;
+   
+   dg(k) = dg(k) + C1;
+   dg(k+1) = dg(k+1) + C2;
+   sdg(k) = sdg(k) - C2;
    
    %Intern
    for j = 2:VH-1 %in hooghte
        M = (MatArray(i,j)+MatArray(i+1,j))/2;
        C1 = M*dy/dx; 
-       C2 =M*dy/dx;
-       k = i+VW*(j-1);
-       %Vergelijking k
-       K(k,k) = K(k,k) + C1;
-       K(k,k+1) = K(k,k+1) - C2;
-       %vergelijking k+1
-       K(k+1,k) = K(k+1,k) - C1;
-       K(k+1,k+1) = K(k+1,k+1) + C2;
+       C2 = M*dy/dx;
+       k  = i+VW*(j-1);
+%        %Vergelijking k
+%        K(k,k) = K(k,k) + C1;
+%        K(k,k+1) = K(k,k+1) - C2;
+%        %vergelijking k+1
+%        K(k+1,k) = K(k+1,k) - C1;
+%        K(k+1,k+1) = K(k+1,k+1) + C2;
+       
+       dg(k) = dg(k) + C1;
+       dg(k+1) = dg(k+1) + C2;
+       sdg(k) = sdg(k) - C2;
    end
    
    %Boven
@@ -68,9 +84,13 @@ for i = 1:VW-1 %in breedte
    C1 = M*dy/2/dx; C2 = M*dy/2/dx;
    k = i+VW*(VH-1);
    %Vergelijking k
-   K(k,k) = K(k,k) + C1; K(k,k+1) = K(k,k+1) - C2;
-   %vergelijking k+1
-   K(k+1,k) = K(k+1,k) - C1; K(k+1,k+1) = K(k+1,k+1) + C2;
+%    K(k,k) = K(k,k) + C1; K(k,k+1) = K(k,k+1) - C2;
+%    %vergelijking k+1
+%    K(k+1,k) = K(k+1,k) - C1; K(k+1,k+1) = K(k+1,k+1) + C2;
+   
+   dg(k) = dg(k) + C1;
+   dg(k+1) = dg(k+1) + C2;
+   sdg(k) = sdg(k) - C2;
 end
 
 %Horizontale Faces
@@ -80,19 +100,26 @@ for j = 1:VH-1 %in hooghte
     C1 = M*dx/2/dy; C2 = M*dx/2/dy;
     k = 1+VW*(j-1);
     %Vergelijking k
-    K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
-    %vergelijking k+VB
-    K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
+%     K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
+%     %vergelijking k+VB
+%     K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
     
+    dg(k) = dg(k) + C1;
+    dg(k+VW) = dg(k+VW) + C2;
+    vwdg(k) = vwdg(k) - C2;
     %Intern
     for i = 2:VW-1 %in breedte
        M = (MatArray(i,j)+MatArray(i,j+1))/2;
        C1 = M*dx/dy; C2 = M*dx/dy;
        k = i+VW*(j-1);
        %Vergelijking k
-       K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
-       %vergelijking k+VB
-       K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
+%        K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
+%        %vergelijking k+VB
+%        K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
+       
+        dg(k) = dg(k) + C1;
+        dg(k+VW) = dg(k+VW) + C2;
+        vwdg(k) = vwdg(k) - C2;
     end
    
     %Rechts
@@ -100,9 +127,13 @@ for j = 1:VH-1 %in hooghte
     C1 = M*dx/2/dy; C2 = M*dx/2/dy;
     k = VW+VW*(j-1);
     %Vergelijking k
-    K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
-    %vergelijking k+VB
-    K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
+%     K(k,k) = K(k,k) + C1; K(k,k+VW) = K(k,k+VW) - C2;
+%     %vergelijking k+VB
+%     K(k+VW,k) = K(k+VW,k) - C1; K(k+VW,k+VW) = K(k+VW,k+VW) + C2;
+    
+    dg(k) = dg(k) + C1;
+    dg(k+VW) = dg(k+VW) + C2;
+    vwdg(k) = vwdg(k) - C2;
 end
 
 %spy(K);
@@ -214,7 +245,9 @@ PW= 10^8; %Penaltywaarde
 %Kleine Cell
 if BC0(1,1)=='D'
        k = 1;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(1,4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC0(1,4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC0(1,4)*dx/2;
     k = 1;
@@ -225,7 +258,9 @@ for i = 2:size(BC0,1)-1
     if BC0(i,1)=='D'
         for j = BC0(i,2):BC0(i,3)
             k = j;
-            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(i,4)*PW;
+%             K(k,k) = K(k,k)+ PW;
+            RHS(k) = RHS(k) + BC0(i,4)*PW;
+            dg(k) = dg(k) + PW;
         end
     else %Neumann   
         for j = BC0(i,2):BC0(i,3)
@@ -238,7 +273,9 @@ end
 %Eindcell
 if BC0(1,1)=='D' %diriclet
        k = VW;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC0(size(BC0,1),4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC0(size(BC0,1),4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC0(size(BC0,1),4)*dx/2;
     k = VW;
@@ -249,7 +286,9 @@ end
 %Kleine Cell
 if BC1(1,1)=='D'
        k = VW;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(1,4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC1(1,4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC1(1,4)*dx/2;
     k = VW;
@@ -260,7 +299,9 @@ for i = 2:size(BC1,1)-1
     if BC1(i,1)=='D'
         for j = BC1(i,2):BC1(i,3)
             k = j*VW;
-            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(i,4)*PW;
+%             K(k,k) = K(k,k)+ PW;
+            RHS(k) = RHS(k) + BC1(i,4)*PW;
+            dg(k) = dg(k) + PW;
         end
     else %Neumann   
         for j = BC1(i,2):BC1(i,3)
@@ -273,7 +314,9 @@ end
 %Eindcell
 if BC1(1,1)=='D' %diriclet
        k = VW*VH;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC1(size(BC1,1),4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC1(size(BC1,1),4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC1(size(BC1,1),4)*dx/2;
     k = VW*VH;
@@ -284,7 +327,9 @@ end
 %Kleine Cell
 if BC2(1,1)=='D'
        k = 1+(VH-1)*VW;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(1,4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC2(1,4)*PW;
+       dg(k) = dg(k)+ PW;
 else %Neumann   
     C1 =  BC2(1,4)*dx/2;
     k = 1+(VH-1)*VW;
@@ -295,7 +340,9 @@ for i = 2:size(BC2,1)-1
     if BC2(i,1)=='D'
         for j = BC2(i,2):BC2(i,3)
             k = j+(VH-1)*VW;
-            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(i,4)*PW;
+%             K(k,k) = K(k,k)+ PW;
+            RHS(k) = RHS(k) + BC2(i,4)*PW;
+            dg(k) = dg(k) + PW;
         end
     else %Neumann   
         for j = BC2(i,2):BC2(i,3)
@@ -308,7 +355,9 @@ end
 %Eindcell
 if BC2(1,1)=='D' %diriclet
        k = VW*VH;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC2(size(BC2,1),4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC2(size(BC2,1),4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC2(size(BC2,1),4)*dx/2;
     k = VW*VH;
@@ -319,7 +368,9 @@ end
 %Kleine Cell
 if BC3(1,1)=='D'
        k = 1;
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(1,4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC3(1,4)*PW;
+       dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC3(1,4)*dx/2;
     k = 1+(VH-1)*VW;
@@ -330,7 +381,9 @@ for i = 2:size(BC3,1)-1
     if BC3(i,1)=='D'
         for j = BC3(i,2):BC3(i,3)
             k = 1 + (j-1)*VW;
-            K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(i,4)*PW;
+%             K(k,k) = K(k,k)+ PW;
+            dg(k) = dg(k) + PW;
+            RHS(k) = RHS(k) + BC3(i,4)*PW;
         end
     else %Neumann   
         for j = BC3(i,2):BC3(i,3)
@@ -343,7 +396,9 @@ end
 %Eindcell
 if BC3(1,1)=='D' %diriclet
        k = 1+VW*(VH-1);
-       K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + BC3(size(BC3,1),4)*PW;
+%        K(k,k) = K(k,k)+ PW;
+       RHS(k) = RHS(k) + BC3(size(BC3,1),4)*PW;
+       dg(k) = dg(k)+ PW;
 else %Neumann   
     C1 =  BC3(size(BC3,1),4)*dx/2;
     k = 1+VW*(VH-1);
@@ -351,5 +406,7 @@ else %Neumann
 end
 
 %Oplossen Systeem
+K = spdiags([vwdg, sdg, dg, [0; sdg(1:end-1)], [zeros(VW, 1); vwdg(1:end-VW)]], [-VW, -1, 0, 1, VW], VW*VH, VW*VH);
 Sol = K\RHS;
+% Sol = bicgstab(K, RHS);
 end

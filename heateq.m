@@ -11,5 +11,5 @@ function [f0val, df0dv, fval, dfdv] =  ...
 
     % 1/n sum(v) <= M
     fval = sum(scale(reshape(v, VW * VH, 1)), 'all') - M * VW * VH;  
-    dfdv = ones(1, VW * VH);
+    dfdv = scale(ones(VW * VH, 1))';
 end
