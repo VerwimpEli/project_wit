@@ -1,6 +1,6 @@
 % Initalize problem
-VW = 32;
-VH = 32; 
+VW = 128;
+VH = 128; 
 Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
@@ -48,7 +48,7 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 500;
+maxiter = 50;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 

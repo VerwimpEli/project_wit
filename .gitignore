@@ -1,2 +1,5 @@
 *.m~
 *.asv
+.idea/
+cmake-build-debug/
+
