@@ -5,6 +5,7 @@ Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
 M  = 0.2;   % Metal to plastic ratio
+rng(500);
 v  = rand(VW * VH, 1) * M;
 % v = zeros(VW * VH, 1);
 
