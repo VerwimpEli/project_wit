@@ -38,8 +38,8 @@ for i = 1:VB-1 %in breedte
         k = i+VB*(j-1);
         
         M = (MatArray(i,j)+MatArray(i+1,j))/2;
-        R1 = M * dy/dx/4;
-        R2 = M * dy/dx/4;
+        R1 = M * dy/dx/2;
+        R2 = M * dy/dx/2;
        
        dg(k)   = dg(k) + R1 * SOL(k) - R2 * SOL(k+1);
        dg(k+1) = dg(k+1) - R1 * SOL(k) + R2 * SOL(k+1);
