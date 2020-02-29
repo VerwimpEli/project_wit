@@ -23,7 +23,7 @@ H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
-p = 5;
+p = 1;
 MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet;
 % MatArray = Cmet*simpv + Cpla*(ones(VW,VH)-simpv);
 

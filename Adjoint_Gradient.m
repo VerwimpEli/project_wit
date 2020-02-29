@@ -13,9 +13,9 @@ vbdg = zeros(VB*VH, 1); % VB diagonal
 %Zowel temperatuur en materiaal state zijn cell centered
 %Verticale Faces
 
-p = 5;
+p = 1;
 MatArray = p * (1 - v) .^(p-1) * Cpla + p * v .^ (p-1) * Cmet;
-
+MatArray = ones(size(v))*(Cmet-Cpla);
 for i = 1:VB-1 %in breedte
    %Onder
    k = i;
@@ -38,8 +38,8 @@ for i = 1:VB-1 %in breedte
         k = i+VB*(j-1);
         
         M = (MatArray(i,j)+MatArray(i+1,j))/2;
-        R1 = M * dy/dx/4*(Cmet-Cpla);
-        R2 = M * dy/dx/4*(Cmet-Cpla);
+        R1 = M * dy/dx/4;
+        R2 = M * dy/dx/4;
        
        dg(k)   = dg(k) + R1 * SOL(k) - R2 * SOL(k+1);
        dg(k+1) = dg(k+1) - R1 * SOL(k) + R2 * SOL(k+1);
