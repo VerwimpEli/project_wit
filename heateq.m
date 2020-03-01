@@ -7,7 +7,7 @@ function [f0val, df0dv, fval, dfdv] =  ...
     L = (K')\-scale(ones(VW*VH,1));
     
     f0val = sum(scale(Sol), 'all') ;   
-    df0dv = Adjoint_Gradient(VW,VH,v,L,Sol)';
+    df0dv = Adjoint_Gradient_NoOptimization(VW,VH,v,L,Sol)';
 
     % 1/n sum(v) <= M
     fval = sum(scale(reshape(v, VW * VH, 1)), 'all') - M * VW * VH;  

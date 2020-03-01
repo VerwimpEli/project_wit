@@ -34,7 +34,7 @@ xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 L = (K')\-scale(ones(VB*VH,1));
 AG = Harmonic_Adjoint_Gradient(VB,VH,v,L,Sol);
 
-ERR1 = reshape(AG-FDG,[VB,VH])./reshape(AG+FDG,[VB,VH])/2;
+ERR1 = log10(abs(reshape(AG-FDG,[VB,VH])./reshape(AG+FDG,[VB,VH])/2));
 
 
 figure(2);
@@ -51,7 +51,7 @@ title("FDG");
 
 %%%Bereken van de gradient DMV Finite difference
 function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3)
-    Delta = 10^-4;
+    Delta = 10^-6;
     J = zeros(size(Varray));
     %Referentie Oplossing
     [Sol, ~, ~, ~] =  Harmonic_heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3);
