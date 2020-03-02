@@ -1,4 +1,4 @@
 *.m~
 *.asv
-idea/
+.idea/
 cmake-build-debug/

@@ -8,7 +8,7 @@ M  = 0.2;   % Metal to plastic ratio
 % v  = rand(VW * VH, 1) * M;
 p = 1;
 pmax = 5;
-v = zeros(VW * VH, 1);
+v = single(zeros(VW * VH, 1));
 
 % Boundary Conditions
 VDB = 0.3 * VH + 1;   % Dirichlet begin and end
@@ -50,13 +50,13 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 100;
+maxiter = 10;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 
 % Inital 
 v0 = v;
-[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+[f0val,f0grad,fval,fgrad] = Harmonic_heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 fvals = zeros(maxiter, 1);
 symm  = zeros(maxiter, 1);
 fvals(1) = f0val;
@@ -76,7 +76,7 @@ while kktnorm > kkttol && iter < maxiter
     vold1 = v;
     v = vmma;
     
-    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+    [f0val,f0grad,fval,fgrad] = Harmonic_heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
     fvals(iter+1) = f0val;
     symm(iter+1)  = norm(reshape(v, VW, VH) - flip(reshape(v, VW, VH)), 'fro');
     
