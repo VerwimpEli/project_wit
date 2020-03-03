@@ -139,107 +139,6 @@ end
 %spy(K);
 
 %%%%%%%%%%%%%%%BC
-%%%%Neumann -> niets voor homogene boundaryconditions %Richting in het
-%%%%domein
-%Linkse Rand
-% DT1 = 0;
-%Kleine Cell
-%C1 = DT1*MatArray(1,1)*dy/2;
-%k = 1;
-%RHS(k) = RHS(k) + C1;
-%Gewone Cell
-% for i =2:VH-1
-%     C1 = DT1*MatArray(1,i)*dy;
-%     k = 1+(i-1)*VB;
-%     RHS(k) = RHS(k) + C1;
-% end
-%KleineCell
-%C1 = DT1*MatArray(1,VH)*dy/2;
-%k = 1+(VH-1)*VB
-%RHS(k) = RHS(k) + C1;
-
-%Rechtse rand 
-% DT2 = 0;
-%KleineCell
-%C1 = DT2*MatArray(VB,1)*dy/2;
-%      k = VB;
-%      RHS(k) = RHS(k) + C1;
-%Gewone Grootte
-% for i =2:VH-1
-%      C1 = DT2*MatArray(VB,i)*dy;
-%      k = i*VB;
-%      RHS(k) = RHS(k) + C1;
-% end
-%Kleine Cell
-% C1 = DT2*MatArray(VB,VH)*dy/2;
-%      k = VH*VB;
-%      RHS(k) = RHS(k) + C1;
-
-%Boven rand
-% DT3 = 0;
-% %Kleine Cell
-% C1 = DT3*dx/2;  % TODO 
-% k = 1+(VH-1)*VW;
-% RHS(k) = RHS(k) + C1;
-% %Gewone Grootte
-% for i =2:VW-1
-%     C1 = DT3*dx;
-%     k = i+(VH-1)*VW;
-%     RHS(k) = RHS(k) + C1;
-% end
-% %Kleine Cell
-% C1 = DT3*dx/2;
-% k = VH*VW;
-% RHS(k) = RHS(k) + C1;
-
-
-% %Onderrand
-% DT4 = 0;
-% %Kleine Cell
-% C1 = DT4*dx/2;
-% k = 1;
-% RHS(k) = RHS(k) + C1;
-% %Gewone Grootte
-% for i =2:VW-1
-%     C1 = DT4*dx;
-%     k = i;
-%     RHS(k) = RHS(k) + C1;
-% end
-% %KleineCell
-% C1 = DT4*dx/2;
-% k = VW;
-% RHS(k) = RHS(k) + C1;
-
-%%%%Diriclet
-% PW= 10^8; %Penaltywaarde
-% %links
-% T1 = 20;
-% for i = 1:VH
-%     k = 1 + (i-1)*VW;
-%     %K(k,:) = zeros(1,VB*VH); 
-%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T1*PW;
-% end
-% %rechts
-% T2 = 20;
-% for i = 1:VH
-%     k = i*VW;
-%     %K(k,:) = zeros(1,VB*VH); 
-%     K(k,k) = K(k,k)+ PW;RHS(k) = RHS(k) + T2*PW;
-% end
-
-% %onder
-% T3 = 0;
-% for i = 1:VB
-%     k = i;
-%     K(k,:) = zeros(1,VB*VH); K(k,k) = 1;RHS(k) = T3;
-% end
-% %boven
-% T4 = 0;
-% for i = 1:VB
-%     k = i + VB*(VH-1);
-%     K(k,:) = zeros(1,VB*VH); K(k,k) = 1;RHS(k) = T3;
-% end
-
 %%%%Boundary conditions onder
 PW= 10^8; %Penaltywaarde
 %Kleine Cell
@@ -373,7 +272,7 @@ if BC3(1,1)=='D'
        dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC3(1,4)*dx/2;
-    k = 1+(VH-1)*VW;
+    k = 1; 
     RHS(k) = RHS(k) + C1;
 end
 %%Interne Cellen
