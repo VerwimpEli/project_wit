@@ -9,8 +9,14 @@ Cpla = 0.2; %Plastiek
 %Verticale Faces
 
 p = 5;
-MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet; %verschillende paper
+% MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet; %verschillende paper
 MatDerArray = -p * (1 - v) .^(p-1) * Cpla + p * v .^ (p-1) * Cmet; %Andere paper
+
+dg   = zeros(VB*VH, 1); % Diagonal
+subdg  = zeros(VB*VH, 1); % Subdiagonal
+supdg  = zeros(VB*VH, 1); % Superdiagonal
+subvbdg = zeros(VB*VH, 1); % VB subdiagonal
+supvbdg = zeros(VB*VH, 1); % VB superdiagoal
 
 G = sparse(VB*VH,VB*VH);
 
@@ -27,7 +33,12 @@ for i = 1:VB-1 %in breedte
     
    G(k,   k+1) = G(k,   k+1) + R2 * SOL(k) - R2 * SOL(k+1);
    G(k+1, k+1) = G(k+1, k+1) - R2 * SOL(k) + R2 * SOL(k+1);
-      
+   
+   dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+1);
+   dg(k+1) = dg(k+1) - R2 * SOL(k) + R2 * SOL(k+1);
+   subdg(k) =  subdg(k) - R1 * SOL(k) + R1 * SOL(k+1);
+   supdg(k+1) = supdg(k+1)  + R2 * SOL(k) - R2 * SOL(k+1);
+   
    %Intern
    for j = 2:VH-1 %in hooghte
         k = i+VB*(j-1);
@@ -41,6 +52,11 @@ for i = 1:VB-1 %in breedte
     
         G(k,   k+1) = G(k,   k+1) + R2 * SOL(k) - R2 * SOL(k+1);
         G(k+1, k+1) = G(k+1, k+1) - R2 * SOL(k) + R2 * SOL(k+1);
+        
+        dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+1);
+        dg(k+1) = dg(k+1) - R2 * SOL(k) + R2 * SOL(k+1);
+        subdg(k) =  subdg(k) - R1 * SOL(k) + R1 * SOL(k+1);
+        supdg(k+1) = supdg(k+1)  + R2 * SOL(k) - R2 * SOL(k+1);
    end
    
    %Boven
@@ -56,6 +72,10 @@ for i = 1:VB-1 %in breedte
    G(k,   k+1) = G(k,   k+1) + R2 * SOL(k) - R2 * SOL(k+1);
    G(k+1, k+1) = G(k+1, k+1) - R2 * SOL(k) + R2 * SOL(k+1);
    
+   dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+1);
+   dg(k+1) = dg(k+1) - R2 * SOL(k) + R2 * SOL(k+1);
+   subdg(k) =  subdg(k) - R1 * SOL(k) + R1 * SOL(k+1);
+   supdg(k+1) = supdg(k+1)  + R2 * SOL(k) - R2 * SOL(k+1);
 end
 
 %Horizontale Faces
@@ -72,7 +92,12 @@ for j = 1:VH-1 %in hooghte
     
     G(k,   k+VB) = G(k,   k+VB) + R2 * SOL(k) - R2 * SOL(k+VB);
     G(k+VB, k+VB) = G(k+VB, k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
-       
+    
+    dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+VB);
+    dg(k+VB) = dg(k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
+    subvbdg(k) =  subvbdg(k) - R1 * SOL(k) + R1 * SOL(k+VB);
+    supvbdg(k+VB) = supvbdg(k+VB)  + R2 * SOL(k) - R2 * SOL(k+VB);
+    
     %Intern
     for i = 2:VB-1 %in breedte
         k = i+VB*(j-1);
@@ -86,6 +111,11 @@ for j = 1:VH-1 %in hooghte
     
         G(k,   k+VB) = G(k,   k+VB) + R2 * SOL(k) - R2 * SOL(k+VB);
         G(k+VB, k+VB) = G(k+VB, k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
+        
+        dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+VB);
+        dg(k+VB) = dg(k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
+        subvbdg(k) =  subvbdg(k) - R1 * SOL(k) + R1 * SOL(k+VB);
+        supvbdg(k+VB) = supvbdg(k+VB)  + R2 * SOL(k) - R2 * SOL(k+VB);
     end
    
     %Rechts
@@ -101,7 +131,12 @@ for j = 1:VH-1 %in hooghte
     G(k,   k+VB) = G(k,   k+VB) + R2 * SOL(k) - R2 * SOL(k+VB);
     G(k+VB, k+VB) = G(k+VB, k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
     
+    dg(k)   = dg(k) + R1 * SOL(k) - R1 * SOL(k+VB);
+    dg(k+VB) = dg(k+VB) - R2 * SOL(k) + R2 * SOL(k+VB);
+    subvbdg(k) =  subvbdg(k) - R1 * SOL(k) + R1 * SOL(k+VB);
+    supvbdg(k+VB) = supvbdg(k+VB)  + R2 * SOL(k) - R2 * SOL(k+VB);
+    
 end
-
+G = spdiags([subvbdg, subdg, dg, supdg, supvbdg], [-VB, -1, 0, 1, VB], VB*VH, VB*VH);
 AG = L'*G;
 end
