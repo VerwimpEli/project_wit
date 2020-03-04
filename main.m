@@ -1,6 +1,6 @@
 % Initalize problem
-VW = 128;
-VH = 128; 
+VW = 32;
+VH = 32; 
 Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
@@ -8,7 +8,7 @@ M  = 0.2;   % Metal to plastic ratio
 % v  = rand(VW * VH, 1) * M;
 p = 1;
 pmax = 5;
-v = single(zeros(VW * VH, 1));
+v = zeros(VW * VH, 1);
 
 % Boundary Conditions
 VDB = 0.3 * VH + 1;   % Dirichlet begin and end
@@ -50,7 +50,7 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 10;
+maxiter = 500;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 

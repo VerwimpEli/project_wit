@@ -1,5 +1,9 @@
 function [f0val, df0dv, fval, dfdv] =  ...
     Harmonic_heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+
+    if nargin < 12
+        p = 1;
+    end
                                                 
     % Solve heat equation and calculate gradient
     v = reshape(v, [VW, VH]);

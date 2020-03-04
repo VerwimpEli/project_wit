@@ -16,9 +16,10 @@ BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker
 %%Extra parameters
 q = 200;
 Cmet = 65; Cpla = 0.2;
+p = 2;
 
 %Refentie oplossing
-[Sol,K] = Harmonic_FVM(VB, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+[Sol,K] = Harmonic_FVM(VB, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 
 
 %Visualisatie %Heel ruw komt niet direct overeen met echte systeem
@@ -28,11 +29,11 @@ surf(SOL);
 xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 
 %Benaderen Jacobiaan
- FDG = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3)';
+ FDG = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';
 
 %Adjoint
 L = (K')\-scale(ones(VB*VH,1));
-AG = Harmonic_Adjoint_Gradient(VB,VH,v,L,Sol);
+AG = Harmonic_Adjoint_Gradient(VB,VH,v,L,Sol, p, Cmet, Cpla);
 
 ERR1 = log10(abs(reshape(AG-FDG,[VB,VH])./reshape(AG+FDG,[VB,VH])/2));
 
@@ -50,16 +51,16 @@ surf(reshape(FDG,[VB,VH]));
 title("FDG");
 
 %%%Bereken van de gradient DMV Finite difference
-function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3)
+function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
     Delta = 10^-6;
     J = zeros(size(Varray));
     %Referentie Oplossing
-    [Sol, ~, ~, ~] =  Harmonic_heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+    [Sol, ~, ~, ~] =  Harmonic_heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
     
     %Loop
     for i = 1:size(Varray,1)
             Varray2 = Varray; Varray2(i) = Varray2(i)*(1+Delta);
-            [FD_Sol, ~, ~, ~] =  Harmonic_heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+            [FD_Sol, ~, ~, ~] =  Harmonic_heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
             J(i)= (FD_Sol - Sol)/(Delta*Varray(i)); %of is dit de gradient?
     end
 end
