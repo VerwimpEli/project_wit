@@ -37,32 +37,58 @@ SOL :: referentie naar solution vector
 #define NEUMANN 1
 #define DIRICHLET 0
 #include <vector> //Voor de vectoren te kunnen gebruiken
+#include <math.h>       
 
 //FUNCTOR
-template<typename S> //type scalar dat gebruikt wordt
+template<typename S> //type scalar dat gebruikt wordt voor berekeneningen
 class FVM
 {
     public:
     FVM(float H, float W, int VW, int VH, float M, float Q, float Cmet, float Cpla, int p,)
     :H_(H);W_(W);VW_(VW);VH_(VH);M_(M);Q_(Q); Cmet_(Cmet); Cpla_(Cpla); p_(p);
-    diag_(VW*VH);diagU1_(VW*VH);diagL1_(VW*VH);diagU2_(VW*VH);diagL2_(VW*VH);
+    diag_(VW*VH);diagU1_(VW*VH);diagU2_(VW*VH);RHS_(VW*VH,Q*W_/(VW-1)*H_/(VH-1));dx_(W_/(VW-1));dy_(H_/(VH-1));
     {}//Constructor
 
-    void operator()(std::vector<double> & v, Eigen::SparseMatrix<?> & K, std::vector<double>)
+    void operator()(std::vector<double> & v, Eigen::SparseMatrix<?> & K, std::vector<double> & SOL)
     {
-        S dx = W_/(VW-1);
-        S dy = H_/(VH-1);
+        //Hulpvariable
+        S C;
+        S M;
+        std::vector<S> Material(v); //Zou een kopie moeten zijn
+
+        //Berekenen van de materiaal coefficienten //MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet;
+        std::transform(Material.begin(),Material.end(),Material.begin(),[float Cmet, float Cpla](double ve) -> std::pow((1-ve),p_)*Cpla_ + std::pow(ve,p_)*Cmet_ ))
+
+        //Berekenen van de RHS //Verschalen randen links en rechts want dit zijn kleinere volumes
+        for(int k = 0;k<VW*VH; k = k + VW) 
+        {
+            RHS(k) = RHS(k)/2;
+            RHS(k+VW-1) = RHS(k+VW-1)/2;
+        }
+
+        for(int k = 0; k<VW;k = k + 1) //Verschalen randen onder en boven 
+        {
+            RHS(k) = RHS(k)/2;
+            RHS(k+VW*(VH-1) = RHS(k+VW*(VH-1))/2;
+        }
+
+        //Contributies voor de horizontale interface tussen cellen
+        for(int i =0;i<VW-1 ;i = i+1) //Over de breedte
+        {
+            
+
+        }
+
     }
 
 
 
-private: //Hulpvariable
+private: 
 //Diagonalen
 std::vector<S> diag_;
 std::vector<S> diagU1_;
-std::vector<S> diagL1_;
 std::vector<S> diagU2_;
-std::vector<S> diagL2_;
+std::vector<S> RHS_;
 //Overige parameters
 float H_;
 float W_;
@@ -73,5 +99,7 @@ float Q_;
 float Cmet_;
 float Cpla_;
 int p_;
+S dx_;
+S dy_;
 };
 
