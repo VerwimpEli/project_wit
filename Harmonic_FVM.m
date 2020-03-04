@@ -18,7 +18,7 @@
 % volumes en de vierde en laatste waarde in de rij is waarde van de BC
 % zelf.
 
-function [Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+function [Sol,K] = Harmonic_FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
 H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
@@ -26,7 +26,7 @@ dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 if nargin < 11
     p = 1;
 end
-MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet;
+MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet; %verschillende paper
 % MatArray = Cmet*simpv + Cpla*(ones(VW,VH)-simpv);
 
 %Aanmaken van matrix en RHS
@@ -49,7 +49,7 @@ RHS(VW:VW:VW*VH,1) = 1/2*RHS(VW:VW:VW*VH,1);%RechtseRij
 %Verticale Faces
 for i = 1:VW-1 %in breedte
    %Onder
-   M  = (MatArray(i,1)+MatArray(i+1,1))/2;
+   M = 2/(1/MatArray(i,1)+1/MatArray(i+1,1));%M  = (MatArray(i,1)+MatArray(i+1,1))/2;
    C1 = M*dy/2/dx; C2 = M*dy/2/dx;
    k = i;
    %Vergelijking k
@@ -65,7 +65,7 @@ for i = 1:VW-1 %in breedte
    
    %Intern
    for j = 2:VH-1 %in hooghte
-       M = (MatArray(i,j)+MatArray(i+1,j))/2;
+       M = 2/(1/MatArray(i,j)+1/MatArray(i+1,j));%M = (MatArray(i,j)+MatArray(i+1,j))/2;
        C1 = M*dy/dx; 
        C2 = M*dy/dx;
        k  = i+VW*(j-1);
@@ -82,7 +82,7 @@ for i = 1:VW-1 %in breedte
    end
    
    %Boven
-   M = (MatArray(i,VH)+MatArray(i+1,VH))/2;
+   M = 2/(1/MatArray(i,VH)+1/MatArray(i+1,VH));%M = (MatArray(i,VH)+MatArray(i+1,VH))/2;
    C1 = M*dy/2/dx; C2 = M*dy/2/dx;
    k = i+VW*(VH-1);
    %Vergelijking k
@@ -98,7 +98,7 @@ end
 %Horizontale Faces
 for j = 1:VH-1 %in hooghte
     %Links
-    M = (MatArray(1,j)+MatArray(1,j+1))/2;
+    M = 2/(1/MatArray(1,j)+1/MatArray(1,j+1));%M = (MatArray(1,j)+MatArray(1,j+1))/2;
     C1 = M*dx/2/dy; C2 = M*dx/2/dy;
     k = 1+VW*(j-1);
     %Vergelijking k
@@ -111,7 +111,7 @@ for j = 1:VH-1 %in hooghte
     vwdg(k) = vwdg(k) - C2;
     %Intern
     for i = 2:VW-1 %in breedte
-       M = (MatArray(i,j)+MatArray(i,j+1))/2;
+       M = 2/(1/MatArray(i,j)+1/MatArray(i,j+1));%M = (MatArray(i,j)+MatArray(i,j+1))/2;
        C1 = M*dx/dy; C2 = M*dx/dy;
        k = i+VW*(j-1);
        %Vergelijking k
@@ -125,7 +125,7 @@ for j = 1:VH-1 %in hooghte
     end
    
     %Rechts
-    M = (MatArray(VW,j)+MatArray(VW,j+1))/2;
+    M = 2/(1/MatArray(VW,j)+1/MatArray(VW,j+1)); %M = (MatArray(VW,j)+MatArray(VW,j+1))/2;
     C1 = M*dx/2/dy; C2 = M*dx/2/dy;
     k = VW+VW*(j-1);
     %Vergelijking k
@@ -274,7 +274,7 @@ if BC3(1,1)=='D'
        dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC3(1,4)*dx/2;
-    k = 1; 
+    k = 1+(VH-1)*VW;
     RHS(k) = RHS(k) + C1;
 end
 %%Interne Cellen
