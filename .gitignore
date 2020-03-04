@@ -2,4 +2,4 @@
 *.asv
 .idea/
 cmake-build-debug/
-
+*.o
