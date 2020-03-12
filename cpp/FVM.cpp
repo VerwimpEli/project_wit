@@ -63,13 +63,12 @@ SOL :: referentie naar solution vector
 #include <algorithm> //Transform
 #include <iostream> //Input en output
 
-//Functie voor het printen van alle elementen in een std::vector
-void Print (const std::vector<double>& v) //Copypaste vh internet
-{
-  //vector<int> v;
-  for (int i=0; i<v.size();i++){
-    std::cout << v[i] << std::endl;
+void Print (const std::vector<double>& v) {
+    std::cout << "[" << v.size() << "] (";
+    for (int i=0; i<v.size();i++){
+      std::cout << v[i] << " ";
   }
+  std::cout << ")" << std::endl;
 }
 
 //Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.

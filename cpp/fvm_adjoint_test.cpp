@@ -68,7 +68,7 @@ int main(){
     Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::NaturalOrdering<int>> solver;
     solver.compute(K);
     L = solver.solve(rhs);
-    
+
     std::vector<double> AG(VW * VH);
     ag(mat, L, Sol, AG);
 
