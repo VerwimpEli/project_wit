@@ -6,7 +6,6 @@
 #include <assert.h>
 #include <iostream>
 #include <vector>
-#include "BoundaryCondition.cpp"
 #include <Eigen/Sparse>
 #include<Eigen/SparseQR>
 #include <Eigen/Dense>
@@ -130,7 +129,9 @@ class FVM
         std::vector<S> Material(v); //Zou een kopie moeten zijn
 
         //Berekenen van de materiaal coefficienten //MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet;
-        std::transform(Material.begin(),Material.end(),Material.begin(),[Cmet_c = Cmet_, Cpla_c = Cpla_,p_c = p_](S ve) -> S {return std::pow((1-ve),p_c)*Cpla_c + std::pow(ve,p_c)*Cmet_c;});
+        std::transform(Material.begin(),Material.end(),Material.begin(),
+                [Cmet_c = Cmet_, Cpla_c = Cpla_,p_c = p_](S ve) ->
+                S {return std::pow((1-ve),p_c)*Cpla_c + std::pow(ve,p_c)*Cmet_c;});
 
         //Kleine Test
         //Print(Material); //Ziet er OK uit
@@ -456,65 +457,4 @@ class FVM
 
     }
 
-}
-;
-
-//Testcase
-int main()
-{
-    //Test voor functie ratioToIndex //Ziet er OK uit
-    //std::cout << ratioToIndex(0.04,11) << std::endl;
-    //std::cout << ratioToIndex(0.06,11) << std::endl;
-    //std::cout << ratioToIndex(0.94,11) << std::endl;
-    //std::cout << ratioToIndex(0.96,11) << std::endl;
-    
-    //basisInput voor de test
-    double H = 1.0;
-    double W = 1.0;
-    int VW = 5;
-    int VH = 6;
-    double Q = 200.0;
-    double Cmet = 65.0;
-    double Cpla = 0.2;
-    int p = 2; 
-
-    //BoundaryConditions
-    //BC0 //ONDER
-    BoundarySegment a = BoundarySegment(NEUMANN, 0, 1, 0);
-    std::vector<BoundarySegment> SegVec0({a});
-    BoundaryCondition BC0(SegVec0);
-
-    //BC1 //Rechts
-    BoundarySegment b = BoundarySegment(DIRICHLET, 0, 1, 293);
-    std::vector<BoundarySegment> SegVec1({b});
-    BoundaryCondition BC1(SegVec1);
-    //BC2 //Boven
-    //BoundarySegment a = BoundarySegment(NEUMANN, 0, 1, 0);
-    //std::vector<BoundarySegment> SegVec1({b});
-    BoundaryCondition BC2(SegVec0);
-    //BC3 //LINKS
-    BoundarySegment d = BoundarySegment(DIRICHLET, 0, 1, 273);
-    std::vector<BoundarySegment> SegVec3({d});
-    BoundaryCondition BC3(SegVec3);
-
-
-    //materiaal ratios
-    std::vector<double> mat = std::vector<double>(VW*VH);
-    std::fill(mat.begin(),mat.end(),0.5); //Klopt
-
-    //SOL vector 
-    std::vector<double> SOL(VW*VH);
-
-    Eigen::SparseMatrix<double> K(VW * VH, VW * VH);
-    
-    //Aanmaken functor //FVM(S H, S W, int VW, int VH, S Q, S Cmet, S Cpla, int p)
-    FVM<double> test = FVM<double>(H, W, VW, VH, Q, Cmet, Cpla, p, BC0, BC1, BC2, BC3);
-
-    //function call
-    test(mat, SOL, K);
-
-    Print(SOL);
-
-    return 0;
-
-}
+};

@@ -27,10 +27,10 @@ public:
     BoundarySegment()
     : type_(DIRICHLET), start_(0), stop_(1), value_(273) {}
 
-    int type() { return type_; }
-    float start() { return start_; }
-    float stop() { return stop_; }
-    float value() { return value_; }
+    int type() const { return type_; }
+    float start() const { return start_; }
+    float stop() const { return stop_; }
+    float value() const { return value_; }
 
 private:
     int type_;
@@ -55,6 +55,14 @@ public:
                 stop = BoundarySegment(seg.type(), 1, 1, seg.value());
             }
         }
+    }
+
+    BoundaryCondition(BoundarySegment const s)
+    : segments_({s}) {
+        assert(s.start() == 0);
+        assert(s.stop() == 1);
+        start = BoundarySegment(s.type(), 0, 0, s.value());
+        stop = BoundarySegment(s.type(), 1, 1, s.value());
     }
 
     std::vector<BoundarySegment> GetSegments() { return segments_; }
