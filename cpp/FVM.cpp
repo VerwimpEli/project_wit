@@ -3,12 +3,15 @@
 //////////////////////////////////////////////
 
 
-// BOUNDARY CONDITIONS CLASS // TODO verwijderen en correct linken
-// Created by eli on 04/03/2020.
-//
 #include <assert.h>
 #include <iostream>
 #include <vector>
+#include "BoundaryCondition.cpp"
+#include <Eigen/Sparse>
+#include<Eigen/SparseQR>
+#include <Eigen/Dense>
+#include <Eigen/OrderingMethods>
+
 
 #ifndef DIRICHLET
 #define  DIRICHLET 0
@@ -18,58 +21,6 @@
 #define  NEUMANN 1
 #endif
 
-class BoundarySegment
-{
-public:
-    BoundarySegment(int type, float start, float stop, float value)
-    : type_(type), start_(start), stop_(stop), value_(value) {
-        assert(type == 0 || type == 1);
-    }
-
-    BoundarySegment(BoundarySegment const & bs)
-    : type_(bs.type_), start_(bs.start_), stop_(bs.stop_), value_(bs.value_) {}
-
-    BoundarySegment()
-    : type_(DIRICHLET), start_(0), stop_(1), value_(273) {}
-
-    int type() { return type_; }
-    float start() { return start_; }
-    float stop() { return stop_; }
-    float value() { return value_; }
-
-private:
-    int type_;
-    float start_;
-    float stop_;
-    float value_;
-};
-
-
-class BoundaryCondition
-{
-public:
-    BoundaryCondition(std::vector<BoundarySegment> const s)
-    : segments_(s) {
-
-        for (BoundarySegment seg: s){
-            if (seg.start() == 0){ 
-                start = BoundarySegment(seg.type(), 0, 0, seg.value());
-            } 
-             if (seg.stop() == 1){ 
-                stop = BoundarySegment(seg.type(), 1, 1, seg.value());
-            }
-        }
-    }
-
-    std::vector<BoundarySegment> GetSegments() { return segments_; }
-    BoundarySegment GetStart(){ return start; }
-    BoundarySegment GetStop(){ return stop; }
-
-private:
-    BoundarySegment start;
-    BoundarySegment stop;
-    std::vector<BoundarySegment> segments_;
-};
 
 //VERVOLG FVM
 
@@ -171,7 +122,7 @@ class FVM
 
 
     //Het opstellen van de vergelijkingen en testen
-    void operator()(std::vector<double> & v,  std::vector<double> & SOL) //Eigen::SparseMatrix<?> & K, later toevoegens
+    void operator()(std::vector<double> & v,  std::vector<double> & SOL, Eigen::SparseMatrix<double> & K)
     {
         //Hulpvariable
         S C;
@@ -434,18 +385,18 @@ class FVM
          //De Gewone cellen op de onderrand
         for (BoundarySegment seg: BC3_.GetSegments())
         {
-            
+
             beginIndex = std::max(1,ratioToIndex(seg.start(),VH_));
             endIndex = std::min(VH_-1,ratioToIndex(seg.stop(),VH_));
             if(seg.type() == DIRICHLET)
             {
-                
+
                 for( int i = beginIndex; i < endIndex;i = i + 1)
                 {
-                    RHS_[i*VW_] = RHS_[i*VW_] + seg.value()*PW; 
-                    diag_[i*VW_] = diag_[i*VW_] + PW; 
+                    RHS_[i*VW_] = RHS_[i*VW_] + seg.value()*PW;
+                    diag_[i*VW_] = diag_[i*VW_] + PW;
                 }
-                
+
             }
             else
             {
@@ -458,7 +409,7 @@ class FVM
         //Kleine cell op het einde vd rand
         if(BC3_.GetStop().type() == DIRICHLET)
         {
-            RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*PW; 
+            RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*PW;
             diag_[(VH_-1)*VW_] = diag_[(VH_-1)*VW_] + PW;
         }
         else
@@ -466,16 +417,43 @@ class FVM
             RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*dy_/2;
         }
 
-        std::cout<<"DIAG"<<std::endl;
-        Print(diag_);
-        std::cout<<"RHS"<<std::endl;
-        Print(RHS_);
+//        std::cout<<"DIAG"<<std::endl;
+//        Print(diag_);
+//        std::cout<<"RHS"<<std::endl;
+//        Print(RHS_);
 
         //Constructie van K
-        std::cout << "TODO : Constructie K" << std::endl;
+        for (int i = 0; i < VW_ * VH_; i++){
 
-        //OPlossen van het systeem
-        std::cout << "TODO : Oplossen K*SOL = RHS" << std::endl;
+            K.insert(i, i) = diag_[i];
+            if (i < VW_ * VH_ - 1) {
+                K.insert(i, i+1) = diagU1_[i];
+                K.insert(i + 1, i) = diagU1_[i];
+            }
+
+            if (i < VW_ * VH_ - VW_) {
+                K.insert(i, i + VW_) = diagU2_[i];
+                K.insert(i + VW_, i) = diagU2_[i];
+            }
+        }
+
+        K.makeCompressed();
+
+        Eigen::VectorXd RHS_E(VW_ * VH_);
+        Eigen::VectorXd x;
+
+        for (int i  = 0; i < VW_ * VH_; i++){
+            RHS_E(i) = RHS_[i];
+        }
+
+        Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::NaturalOrdering<int>> solver;
+        solver.compute(K);
+        x = solver.solve(RHS_E);
+
+        for (int i = 0; i < VW_ * VH_; i++){
+            SOL[i] = x(i);
+        }
+
     }
 
 }
@@ -525,13 +503,17 @@ int main()
     std::fill(mat.begin(),mat.end(),0.5); //Klopt
 
     //SOL vector 
-    std::vector<double> SOL = std::vector<double>(VW*VH);
+    std::vector<double> SOL(VW*VH);
+
+    Eigen::SparseMatrix<double> K(VW * VH, VW * VH);
     
     //Aanmaken functor //FVM(S H, S W, int VW, int VH, S Q, S Cmet, S Cpla, int p)
     FVM<double> test = FVM<double>(H, W, VW, VH, Q, Cmet, Cpla, p, BC0, BC1, BC2, BC3);
 
     //function call
-    test(mat, SOL);
+    test(mat, SOL, K);
+
+    Print(SOL);
 
     return 0;
 

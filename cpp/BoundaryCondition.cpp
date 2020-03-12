@@ -49,7 +49,9 @@ public:
         for (BoundarySegment seg: s){
             if (seg.start() == 0){
                 start = BoundarySegment(seg.type(), 0, 0, seg.value());
-            } else if (seg.stop() == 1){
+            }
+
+            if (seg.stop() == 1){
                 stop = BoundarySegment(seg.type(), 1, 1, seg.value());
             }
         }
@@ -68,27 +70,28 @@ private:
 
 /**
  * Test/Example of BoundaryCondition
+ * Don't outcomment this if using in other files.
  */
-int main(){
-
-    BoundarySegment a = BoundarySegment(NEUMANN, 0.6, 1, 0);
-    BoundarySegment b = BoundarySegment(DIRICHLET, 0.4, 0.6, 293);
-    BoundarySegment c = BoundarySegment(NEUMANN, 0, 0.4, 5);
-    std::vector<BoundarySegment> SegVec({a, b, c});
-    BoundaryCondition bc(SegVec);
-
-    for (BoundarySegment seg : bc.GetSegments()) {
-        std::cout << seg.type() << std::endl;
-    }
-
-    std::cout << "Start: " << bc.GetStart().type() << std::endl;
-    std::cout << "Start: " << bc.GetStart().start() << std::endl;
-    std::cout << "Start: " << bc.GetStart().stop() << std::endl;
-    std::cout << "Start: " << bc.GetStart().value() << std::endl;
-
-    std::cout << "Stop: " << bc.GetStop().type() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().start() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().stop() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().value() << std::endl;
-    return 0;
-}
+//int main(){
+//
+//    BoundarySegment a = BoundarySegment(NEUMANN, 0.6, 1, 0);
+//    BoundarySegment b = BoundarySegment(DIRICHLET, 0.4, 0.6, 293);
+//    BoundarySegment c = BoundarySegment(NEUMANN, 0, 0.4, 5);
+//    std::vector<BoundarySegment> SegVec({a, b, c});
+//    BoundaryCondition bc(SegVec);
+//
+//    for (BoundarySegment seg : bc.GetSegments()) {
+//        std::cout << seg.type() << std::endl;
+//    }
+//
+//    std::cout << "Start: " << bc.GetStart().type() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().start() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().stop() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().value() << std::endl;
+//
+//    std::cout << "Stop: " << bc.GetStop().type() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().start() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().stop() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().value() << std::endl;
+//    return 0;
+//}
