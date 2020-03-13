@@ -5,6 +5,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <iostream>
+#include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -40,6 +41,7 @@ public:
         Eigen::SparseMatrix<double> K(VW_ * VH_, VW_ * VH_);
 
         fvm(v, sol, K);
+        Print(sol);
         f = std::accumulate(sol.begin(), sol.end(), 0.0);
 
         K = K.transpose();
@@ -63,6 +65,13 @@ public:
         std::fill(dg.begin(), dg.end(), 1.0);
         scale(dg, VW_, dg.size());
     }
+
+    void solve_heat_eq(std::vector<double> & v, std::vector<double> & t){
+        Eigen::SparseMatrix<double> K(VW_ * VH_, VW_ * VH_);
+        fvm(v, t, K);
+    }
+
+
 
 private:
     double H_, W_, Cmet_, Cpla_, Q_, M_;
@@ -92,15 +101,15 @@ int main(int argc, char *argv[]) {
 
     double H = 1.0;
     double W = 1.0;
-    int VW = 5;
-    int VH = 5;
+    int VW = 10;
+    int VH = 10;
     double Q = 200.0;
     double Cmet = 65.0;
     double Cpla = 0.2;
     double M = 0.4;
-    int p = 2;
+    int p = 1;
 
-    std::vector<double> v(VW*VH, 0);
+    std::vector<double> v(VW*VH, 0.1);
 
     BoundarySegment b1 = BoundarySegment(NEUMANN, 0, 1, 0);
     BoundaryCondition BcBottom(b1);
@@ -117,8 +126,8 @@ int main(int argc, char *argv[]) {
 
 	int n = VW * VH;
 	int m = 1;
-	double movlim = 0.2;
-	int max_iter = 5;
+	double movlim = 1.0;
+	int max_iter = 100;
 
     std::vector<double> v_old(v);
     double f;
@@ -133,10 +142,19 @@ int main(int argc, char *argv[]) {
 
 	double ch = 1.0;
 	int itr = 0;
-	while (ch > 0.002 && itr < max_iter) {
+	while (itr < max_iter) {
 		itr++;
 
 		heateq(v, f, df, g, dg);
+
+//        std::cout << "\n\n---------- f ----------\n\n";
+//        std::cout << f << std::endl;
+//        std::cout << "\n\n---------- g ----------\n\n";
+//        std::cout << g << std::endl;
+//        std::cout << "\n\n---------- df ----------\n\n";
+//		Print(df);
+//		std::cout << "\n\n--------- dg --------\n\n";
+//		Print(df);
 
 		// Set outer move limits
 		for (int i=0;i<n;i++) {
@@ -162,7 +180,7 @@ int main(int argc, char *argv[]) {
 		}
 
 		// Print to screen
-		printf("it.: %d, obj.: %f, ch.: %f \n",itr, f, ch);
+		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, ch);
 	}
 
 	std::cout << "v:";
@@ -170,6 +188,23 @@ int main(int argc, char *argv[]) {
 		std::cout << " " << v[i];
 	}
 	std::cout << std::endl;
+
+	std::vector<double> t(n);
+	heateq.solve_heat_eq(v, t);
+
+	std::ofstream file;
+	file.open("test.out");
+	for (int i = 0; i < n -1; i++) {
+	    file << v[i] << ",";
+	}
+	file << v[n - 1] << "\n";
+
+    for (int i = 0; i < n -1; i++) {
+        file << t[i] << ",";
+    }
+    file << t[n - 1] << "\n";
+
+	file.close();
 
 	// Deallocate
 	delete mma;

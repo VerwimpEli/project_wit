@@ -93,21 +93,26 @@ class FVM
     std::vector<S> RHS_; // Rechter zijde vh stelsel
     
     //Overige parameters
-    S H_; //Hoogte vh vierkant domein
-    S W_; //Breedte vh vierkant domein
-    int VW_; //Aantal cellen in de breedte
-    int VH_; //aantal cellen in de hoogte
-    S Q_; //oppervlakte warmte productie
-    S Cmet_; //materiaal coefficient van metaal
-    S Cpla_; // materiaal coefficient van plasiek
-    int p_; //
-    S dx_;
-    S dy_;
-    BoundaryCondition BC0_; //De boundary objecten
-    BoundaryCondition BC1_;
-    BoundaryCondition BC2_;
-    BoundaryCondition BC3_;
+    S const H_; //Hoogte vh vierkant domein
+    S const W_; //Breedte vh vierkant domein
+    int const VW_; //Aantal cellen in de breedte
+    int const VH_; //aantal cellen in de hoogte
+    S const Q_; //oppervlakte warmte productie
+    S const Cmet_; //materiaal coefficient van metaal
+    S const Cpla_; // materiaal coefficient van plasiek
+    int const p_; //
+    S const dx_;
+    S const dy_;
+    BoundaryCondition const BC0_; //De boundary objecten
+    BoundaryCondition const BC1_;
+    BoundaryCondition const BC2_;
+    BoundaryCondition const BC3_;
 
+    void reset(){
+        std::fill(diag_.begin(), diag_.end(), 0.0);
+        std::fill(diagU1_.begin(), diagU1_.end(), 0.0);
+        std::fill(diagU2_.begin(), diagU2_.end(), 0.0);
+    }
     
     public:
     FVM(S H, S W, int VW, int VH, S Q, S Cmet, S Cpla, int p, BoundaryCondition BC0, BoundaryCondition BC1, BoundaryCondition BC2, BoundaryCondition BC3)
@@ -122,6 +127,7 @@ class FVM
     //Het opstellen van de vergelijkingen en testen
     void operator()(std::vector<double> & v,  std::vector<double> & SOL, Eigen::SparseMatrix<double> & K)
     {
+        reset();
         //Hulpvariable
         S C;
         S M;

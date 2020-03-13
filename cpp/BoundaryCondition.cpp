@@ -65,9 +65,9 @@ public:
         stop = BoundarySegment(s.type(), 1, 1, s.value());
     }
 
-    std::vector<BoundarySegment> GetSegments() { return segments_; }
-    BoundarySegment GetStart(){ return start; }
-    BoundarySegment GetStop(){ return stop; }
+    std::vector<BoundarySegment> GetSegments() const { return segments_; }
+    BoundarySegment GetStart() const { return start; }
+    BoundarySegment GetStop() const { return stop; }
 
 private:
     BoundarySegment start;

@@ -3,5 +3,6 @@
 .idea/
 cmake-build-debug/
 *.o
+*.out
 cpp/eigen/
 cpp/cmake-build-debug/
