@@ -4,3 +4,4 @@
 cmake-build-debug/
 *.o
 cpp/eigen/
+cpp/cmake-build-debug/
