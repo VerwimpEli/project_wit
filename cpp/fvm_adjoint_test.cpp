@@ -26,7 +26,7 @@ int main(){
     double H = 1.0;
     double W = 1.0;
     int VW = 5;
-    int VH = 6;
+    int VH = 5;
     double Q = 200.0;
     double Cmet = 65.0;
     double Cpla = 0.2;
