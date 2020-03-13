@@ -56,7 +56,7 @@ int main(){
     Eigen::SparseMatrix<double> K(VW * VH, VW* VH);
 
     FVM<double> fvm(H, W, VW, VH, Q, Cmet, Cpla, p, BcBottom, BcRight, BcTop, BcLeft);
-    AdjointGradient ag(W, H, VW, VH, M, Q, Cmet, Cpla, p);
+    AdjointGradient ag(H, W, VW, VH, M, Q, Cmet, Cpla, p);
 
     fvm(mat, Sol, K);
 

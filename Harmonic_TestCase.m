@@ -3,9 +3,9 @@ clear;
 %Constanten %Mesh wordt volledig vierkant verondersteld %Speciale
 %Vierkanten aan de randen zodat de berekende temperaturen het volledige
 %domein insluiten
-VH = 20; VW = 20; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
+VH = 5; VW = 5; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 %rng(500); %Reproduceerbaarheid
-Varray = rand(VW*VH,1);
+Varray = ones(VW*VH,1)*0.5;
 v = reshape(Varray, [VW, VH]);
 
 %%%Boundary condition
@@ -28,9 +28,9 @@ p = 2;
 
 %Visualisatie %Heel ruw komt niet direct overeen met echte systeem
 SOL = reshape(Sol,[VW,VH]);
-figure(1);
-surf(SOL); 
-xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
+% figure(1);
+% surf(SOL); 
+% xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 
 %Benaderen Jacobiaan
 FDG = FD_G(VW,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';

@@ -53,7 +53,6 @@ for i = 1:VB-1 %in breedte
    
    %Boven
    k = i+VB*(VH-1);
-   
    %M = (MatArray(i,VH)+MatArray(i+1,VH))/2;
    M1 = MatArray(i,VH); M2 = MatArray(i+1,VH); %Materialen van de 2 cellen
    dM1 = 2/(M1^2*(1/M1+1/M2)^2); dM2 = 2/(M2^2*(1/M1+1/M2)^2);

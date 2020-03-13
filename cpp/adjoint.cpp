@@ -12,8 +12,8 @@
 class AdjointGradient {
 
     private:
-        float W_;
         float H_;
+        float W_;
         int VW_;
         int VH_;
         float M_;
@@ -23,10 +23,10 @@ class AdjointGradient {
         int p_;
 
     public: 
-        AdjointGradient(float W, float H, int VW, int VH, float M, float Q, float Cmet,
+        AdjointGradient(float H, float W, int VW, int VH, float M, float Q, float Cmet,
         float Cpla, int p)
-            : W_(W)
-            , H_(H)
+            : H_(H)
+            , W_(W)
             , VW_(VW)
             , VH_(VH)
             , M_(M)
@@ -61,12 +61,19 @@ class AdjointGradient {
             double R1;
             double R2;
 
+//            std::cout << "\n\n---------- v ----------\n\n";
+//            Print(v);
             //Berekenen van de materiaal coefficienten
             std::transform(MatArray.begin(),MatArray.end(),MatArray.begin(), [Cmet_c = Cmet_, Cpla_c = Cpla_,p_c = p_](double ve)
                     -> double {return std::pow((1-ve),p_c)*Cpla_c + std::pow(ve,p_c)*Cmet_c;});
 
             std::transform(MatDerArray.begin(),MatDerArray.end(),MatDerArray.begin(), [Cmet_c = Cmet_, Cpla_c = Cpla_,p_c = p_](double ve)
                     -> double {return -p_c*std::pow((1-ve),p_c-1)*Cpla_c + p_c*std::pow(ve,p_c-1)*Cmet_c;});
+
+//            std::cout << "\n\n---------- MatArray ----------\n\n";
+//            Print(MatArray);
+//            std::cout << "\n\n--------- MatDerArray --------\n\n";
+//            Print(MatDerArray);
 
             for(int i = 0; i<VW_-1; ++i){
 
@@ -75,6 +82,7 @@ class AdjointGradient {
                 dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
 
                 R1 = MatDerArray[i*VW_]*dM1*dy/dx/2; R2 = MatDerArray[(i+1)*VW_]*dM2*dy/dx/2;
+//                std::cout << "\n\ndM1: " << dM1;
 
                 dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+1];
                 dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k+1];
@@ -84,12 +92,12 @@ class AdjointGradient {
 
                 for(int j=1; j<VH_-1; ++j){
 
-                    k = i+VW_*(j-1);
+                    k = i+VW_*j;
 
                     M1 = MatArray[i*VW_+j]; M2 = MatArray[(i+1)*VW_+j];
                     dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
 
-                    R1 = MatDerArray[i*VW_+j]*dM1*dy/dx/2; R2 = MatDerArray[(i+1)*VW_+j]*dM2*dy/dx/2;
+                    R1 = MatDerArray[i*VW_+j]*dM1*dy/dx; R2 = MatDerArray[(i+1)*VW_+j]*dM2*dy/dx;
 
                     dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+1];
                     dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k+1];
@@ -99,20 +107,19 @@ class AdjointGradient {
 
                 k = i+VW_*(VH_-1);
 
-                M1 = MatArray[i*VW_+VH_]; M2 = MatArray[(i+1)*VW_+VH_];
+                M1 = MatArray[i*VW_+VH_-1]; M2 = MatArray[(i+1)*VW_+VH_-1];
                 dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
 
-                R1 = MatDerArray[i*VW_+VH_]*dM1*dy/dx/2; R2 = MatDerArray[(i+1)*VW_+VH_]*dM2*dy/dx/2;
+                R1 = MatDerArray[i*VW_+VH_-1]*dM1*dy/dx/2; R2 = MatDerArray[(i+1)*VW_+VH_-1]*dM2*dy/dx/2;
 
                 dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+1];
                 dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k+1];
                 subdg[k] = subdg[k] - R1*SOL[k] + R1*SOL[k+1];
-                supdg[k+1] = supdg[k+1] + R2*SOL[k] - R2*SOL[k+1];
-            }
+                supdg[k+1] = supdg[k+1] + R2*SOL[k] - R2*SOL[k+1];            }
 
             for(int i = 0; i<VH_-1; ++i){
 
-                int k = 1+VW_*(i-1);
+                int k = VW_*i;
 
                 M1 = MatArray[i]; M2 = MatArray[i+1];
                 dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
@@ -124,14 +131,14 @@ class AdjointGradient {
                 subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k + VW_];
                 supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
 
+
                 for(int j=1; j<VW_-1; ++j){
-                    k = j+VW_*(i-1);
+                    k = j+VW_*i;
 
                     M1 = MatArray[j*VW_+i]; M2 = MatArray[j*VW_+i+1];
                     dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
 
-                    R1 = MatDerArray[j*VW_+i]*dM1*dy/dx/2; R2 = MatDerArray[j*VW_+i+1]*dM2*dy/dx/2;
-
+                    R1 = MatDerArray[j*VW_+i]*dM1*dy/dx; R2 = MatDerArray[j*VW_+i+1]*dM2*dy/dx;
 
                     dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k + VW_];
                     dg[k + VW_] = dg[k + VW_] - R2*SOL[k] + R2*SOL[k + VW_];
@@ -139,32 +146,40 @@ class AdjointGradient {
                     supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
                 }
 
-                k = VW_+VW_*(i-1);
+                k = VW_+VW_*i-1;
 
-                M1 = MatArray[VW_*(VW_-1)+i]; M2 = MatArray[i+1+VW_*(VW_-1)];
+                M1 = MatArray[VW_*(VW_-1)+i]; M2 = MatArray[VW_*(VW_-1)+i+1];
                 dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
 
-                R1 = MatDerArray[VW_*(VW_-1)+i]*dM1*dy/dx/2; R2 = MatDerArray[i+1+VW_*(VW_-1)]*dM2*dy/dx/2;
+                R1 = MatDerArray[VW_*(VW_-1)+i]*dM1*dy/dx/2; R2 = MatDerArray[VW_*(VW_-1)+i+1]*dM2*dy/dx/2;
 
                 dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k + VW_];
-                dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k + VW_];
+                dg[k + VW_] = dg[k + VW_] - R2*SOL[k] + R2*SOL[k + VW_];
                 subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k + VW_];
                 supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
             }
+
+//            std::cout << "\n\n---------- supdg ----------\n\n";
+//            Print(supdg);
+//            std::cout << "\n\n--------- supvwdg --------\n\n";
+//            Print(supvwdg);
 
             Eigen::SparseMatrix<double> G(VW_ * VH_, VW_ * VH_);
 
             for (int i = 0; i < VH_ * VW_; i++){
                 G.insert(i, i) = dg[i];
                 if (i < VW_ * VH_ - 1) {
-                    G.insert(i, i+1) = supdg[i];
+                    G.insert(i, i+1) = supdg[i+1];
                     G.insert(i + 1, i) = subdg[i];
                 }
                 if (i < VW_ * VH_ - VW_) {
-                    G.insert(i, i + VW_) = supvwdg[i];
+                    G.insert(i, i + VW_) = supvwdg[i+VW_];
                     G.insert(i + VW_, i) = subvwdg[i];
                 }
             }
+//
+//            std::cout << "\n\n--------- G --------\n\n";
+//            std::cout << G;
 
             Eigen::VectorXd adjgrad(VW_ * VH_);
             adjgrad = L.transpose() * G;
