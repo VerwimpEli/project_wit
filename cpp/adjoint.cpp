@@ -6,8 +6,8 @@
 #include <math.h>
 #include <vector>
 #include <valarray>
-#include <functional> 
-#include "BoundaryCondition.cpp"
+#include <functional>
+#include <Eigen/Sparse>
 
 class AdjointGradient {
 
@@ -36,14 +36,11 @@ class AdjointGradient {
             , p_(p)
         {};
 
-#pragma clang diagnostic push
-#pragma ide diagnostic ignored "OCDFAInspection"
-        void operator() (std::vector<double> v, std::vector<double> L,
-        std::vector<double> SOL, std::vector<double> AG){
+        void operator() (std::vector<double> & v, Eigen::VectorXd & L, std::vector<double> & SOL, std::vector<double> & AG){
             float dx = W_/(VW_-1);
             float dy = H_/(VH_-1);
-            // for_each(v.begin(), v.end(), [](double i) 
-            // { 
+            // for_each(v.begin(), v.end(), [](double i)
+            // {
             //     1.0-i; 
             // });
             // std::transform(v.begin(), v.end(), v.begin(),
@@ -72,6 +69,7 @@ class AdjointGradient {
                     -> double {return -p_c*std::pow((1-ve),p_c-1)*Cpla_c + p_c*std::pow(ve,p_c-1)*Cmet_c;});
 
             for(int i = 0; i<VW_-1; ++i){
+
                 int k = i;
                 M1 = MatArray[i*VW_]; M2 = MatArray[(i+1)*VW_];
                 dM1 = 2/(pow(M1,2)*pow(1/M1+1/M2,2)); dM2 = 2/(pow(M2,2)*pow(1/M1+1/M2,2));
@@ -83,7 +81,9 @@ class AdjointGradient {
                 subdg[k] = subdg[k] - R1*SOL[k] + R1*SOL[k+1];
                 supdg[k+1] = supdg[k+1] + R2*SOL[k] - R2*SOL[k+1];
 
+
                 for(int j=1; j<VH_-1; ++j){
+
                     k = i+VW_*(j-1);
 
                     M1 = MatArray[i*VW_+j]; M2 = MatArray[(i+1)*VW_+j];
@@ -111,6 +111,7 @@ class AdjointGradient {
             }
 
             for(int i = 0; i<VH_-1; ++i){
+
                 int k = 1+VW_*(i-1);
 
                 M1 = MatArray[i]; M2 = MatArray[i+1];
@@ -118,10 +119,10 @@ class AdjointGradient {
 
                 R1 = MatDerArray[i]*dM1*dy/dx/2; R2 = MatDerArray[i+1]*dM2*dy/dx/2;
 
-                dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+VW_];
-                dg[k+VW_] = dg[k+VW_] - R2*SOL[k] + R2*SOL[k+VW_];
-                subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k+VW_];
-                supvwdg[k+VW_] = supvwdg[k+VW_] + R2*SOL[k] - R2*SOL[k+VW_];
+                dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k + VW_];
+                dg[k + VW_] = dg[k + VW_] - R2*SOL[k] + R2*SOL[k + VW_];
+                subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k + VW_];
+                supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
 
                 for(int j=1; j<VW_-1; ++j){
                     k = j+VW_*(i-1);
@@ -131,10 +132,11 @@ class AdjointGradient {
 
                     R1 = MatDerArray[j*VW_+i]*dM1*dy/dx/2; R2 = MatDerArray[j*VW_+i+1]*dM2*dy/dx/2;
 
-                    dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+VW_];
-                    dg[k+VW_] = dg[k+VW_] - R2*SOL[k] + R2*SOL[k+VW_];
-                    subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k+VW_];
-                    supvwdg[k+VW_] = supvwdg[k+VW_] + R2*SOL[k] - R2*SOL[k+VW_];
+
+                    dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k + VW_];
+                    dg[k + VW_] = dg[k + VW_] - R2*SOL[k] + R2*SOL[k + VW_];
+                    subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k + VW_];
+                    supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
                 }
 
                 k = VW_+VW_*(i-1);
@@ -144,14 +146,32 @@ class AdjointGradient {
 
                 R1 = MatDerArray[VW_*(VW_-1)+i]*dM1*dy/dx/2; R2 = MatDerArray[i+1+VW_*(VW_-1)]*dM2*dy/dx/2;
 
-                dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k+VW_];
-                dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k+VW_];
-                subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k+VW_];
-                supvwdg[k+VW_] = supvwdg[k+VW_] + R2*SOL[k] - R2*SOL[k+VW_];
+                dg[k] = dg[k] + R1*SOL[k] - R1*SOL[k + VW_];
+                dg[k+1] = dg[k+1] - R2*SOL[k] + R2*SOL[k + VW_];
+                subvwdg[k] = subvwdg[k] - R1*SOL[k] + R1*SOL[k + VW_];
+                supvwdg[k + VW_] = supvwdg[k + VW_] + R2*SOL[k] - R2*SOL[k + VW_];
             }
 
+            Eigen::SparseMatrix<double> G(VW_ * VH_, VW_ * VH_);
+
+            for (int i = 0; i < VH_ * VW_; i++){
+                G.insert(i, i) = dg[i];
+                if (i < VW_ * VH_ - 1) {
+                    G.insert(i, i+1) = supdg[i];
+                    G.insert(i + 1, i) = subdg[i];
+                }
+                if (i < VW_ * VH_ - VW_) {
+                    G.insert(i, i + VW_) = supvwdg[i];
+                    G.insert(i + VW_, i) = subvwdg[i];
+                }
+            }
+
+            Eigen::VectorXd adjgrad(VW_ * VH_);
+            adjgrad = L.transpose() * G;
+
+            for (int i = 0; i < VW_ * VH_; i++){
+                AG[i] = adjgrad(i);
+            }
         }
-#pragma clang diagnostic pop
-
-
 };
+

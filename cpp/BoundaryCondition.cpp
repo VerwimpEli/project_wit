@@ -27,10 +27,10 @@ public:
     BoundarySegment()
     : type_(DIRICHLET), start_(0), stop_(1), value_(273) {}
 
-    int type() { return type_; }
-    float start() { return start_; }
-    float stop() { return stop_; }
-    float value() { return value_; }
+    int type() const { return type_; }
+    float start() const { return start_; }
+    float stop() const { return stop_; }
+    float value() const { return value_; }
 
 private:
     int type_;
@@ -49,10 +49,20 @@ public:
         for (BoundarySegment seg: s){
             if (seg.start() == 0){
                 start = BoundarySegment(seg.type(), 0, 0, seg.value());
-            } else if (seg.stop() == 1){
+            }
+
+            if (seg.stop() == 1){
                 stop = BoundarySegment(seg.type(), 1, 1, seg.value());
             }
         }
+    }
+
+    BoundaryCondition(BoundarySegment const s)
+    : segments_({s}) {
+        assert(s.start() == 0);
+        assert(s.stop() == 1);
+        start = BoundarySegment(s.type(), 0, 0, s.value());
+        stop = BoundarySegment(s.type(), 1, 1, s.value());
     }
 
     std::vector<BoundarySegment> GetSegments() { return segments_; }
@@ -68,27 +78,28 @@ private:
 
 /**
  * Test/Example of BoundaryCondition
+ * Don't outcomment this if using in other files.
  */
-int main(){
-
-    BoundarySegment a = BoundarySegment(NEUMANN, 0.6, 1, 0);
-    BoundarySegment b = BoundarySegment(DIRICHLET, 0.4, 0.6, 293);
-    BoundarySegment c = BoundarySegment(NEUMANN, 0, 0.4, 5);
-    std::vector<BoundarySegment> SegVec({a, b, c});
-    BoundaryCondition bc(SegVec);
-
-    for (BoundarySegment seg : bc.GetSegments()) {
-        std::cout << seg.type() << std::endl;
-    }
-
-    std::cout << "Start: " << bc.GetStart().type() << std::endl;
-    std::cout << "Start: " << bc.GetStart().start() << std::endl;
-    std::cout << "Start: " << bc.GetStart().stop() << std::endl;
-    std::cout << "Start: " << bc.GetStart().value() << std::endl;
-
-    std::cout << "Stop: " << bc.GetStop().type() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().start() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().stop() << std::endl;
-    std::cout << "Stop: " << bc.GetStop().value() << std::endl;
-    return 0;
-}
+//int main(){
+//
+//    BoundarySegment a = BoundarySegment(NEUMANN, 0.6, 1, 0);
+//    BoundarySegment b = BoundarySegment(DIRICHLET, 0.4, 0.6, 293);
+//    BoundarySegment c = BoundarySegment(NEUMANN, 0, 0.4, 5);
+//    std::vector<BoundarySegment> SegVec({a, b, c});
+//    BoundaryCondition bc(SegVec);
+//
+//    for (BoundarySegment seg : bc.GetSegments()) {
+//        std::cout << seg.type() << std::endl;
+//    }
+//
+//    std::cout << "Start: " << bc.GetStart().type() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().start() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().stop() << std::endl;
+//    std::cout << "Start: " << bc.GetStart().value() << std::endl;
+//
+//    std::cout << "Stop: " << bc.GetStop().type() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().start() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().stop() << std::endl;
+//    std::cout << "Stop: " << bc.GetStop().value() << std::endl;
+//    return 0;
+//}

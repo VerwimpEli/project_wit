@@ -1,6 +1,6 @@
 % Initalize problem
-VW = 128;
-VH = 128; 
+VW = 5;
+VH = 5; 
 Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
