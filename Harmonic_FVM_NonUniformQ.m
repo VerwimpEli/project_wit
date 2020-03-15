@@ -191,7 +191,7 @@ if BC1(1,1)=='D'
        RHS(k) = RHS(k) + BC1(1,4)*PW;
        dg(k) = dg(k) + PW;
 else %Neumann   
-    C1 =  BC1(1,4)*dx/2;
+    C1 =  BC1(1,4)*dy/2;
     k = VW;
     RHS(k) = RHS(k) + C1;
 end
@@ -206,7 +206,7 @@ for i = 2:size(BC1,1)-1
         end
     else %Neumann   
         for j = BC1(i,2):BC1(i,3)
-            C1 =  BC1(i,4)*dx;
+            C1 =  BC1(i,4)*dy;
             k = j*VW;
             RHS(k) = RHS(k) + C1;
         end
@@ -219,7 +219,7 @@ if BC1(1,1)=='D' %diriclet
        RHS(k) = RHS(k) + BC1(size(BC1,1),4)*PW;
        dg(k) = dg(k) + PW;
 else %Neumann   
-    C1 =  BC1(size(BC1,1),4)*dx/2;
+    C1 =  BC1(size(BC1,1),4)*dy/2;
     k = VW*VH;
     RHS(k) = RHS(k) + C1;
 end
@@ -273,7 +273,7 @@ if BC3(1,1)=='D'
        RHS(k) = RHS(k) + BC3(1,4)*PW;
        dg(k) = dg(k) + PW;
 else %Neumann   
-    C1 =  BC3(1,4)*dx/2;
+    C1 =  BC3(1,4)*dy/2;
     k = 1+(VH-1)*VW;
     RHS(k) = RHS(k) + C1;
 end
@@ -288,7 +288,7 @@ for i = 2:size(BC3,1)-1
         end
     else %Neumann   
         for j = BC3(i,2):BC3(i,3)
-            C1 =  BC3(i,4)*dx;
+            C1 =  BC3(i,4)*dy;
             k = 1 + (j-1)*VW;
             RHS(k) = RHS(k) + C1;
         end
@@ -301,7 +301,7 @@ if BC3(1,1)=='D' %diriclet
        RHS(k) = RHS(k) + BC3(size(BC3,1),4)*PW;
        dg(k) = dg(k)+ PW;
 else %Neumann   
-    C1 =  BC3(size(BC3,1),4)*dx/2;
+    C1 =  BC3(size(BC3,1),4)*dy/2;
     k = 1+VW*(VH-1);
     RHS(k) = RHS(k) + C1;
 end

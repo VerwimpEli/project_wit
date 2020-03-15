@@ -3,7 +3,7 @@ clear;
 %Constanten %Mesh wordt volledig vierkant verondersteld %Speciale
 %Vierkanten aan de randen zodat de berekende temperaturen het volledige
 %domein insluiten
-VH = 5; VW = 5; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
+VH = 25; VW = 25; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 %rng(500); %Reproduceerbaarheid
 Varray = ones(VW*VH,1)*0.5;
 v = reshape(Varray, [VW, VH]);
