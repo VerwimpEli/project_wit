@@ -35,8 +35,8 @@ MMASolver::MMASolver(int nn, int mm, double ai, double ci, double di)
 	, m(mm)
 	, iter(0)
 	, xmamieps(1.0e-5)
-	//, epsimin(1e-7)
-	, epsimin(std::sqrt(n + m) * 1e-9)
+	, epsimin(1e-7)
+//	, epsimin(std::sqrt(n + m) * 1e-9)
 	, raa0(0.00001)
 	, move(0.5)
 	, albefa(0.1)
@@ -107,7 +107,7 @@ void MMASolver::SolveDIP(double *x) {
 	while (epsi > tol) {
 
 		loop = 0;
-		while (err > 0.9 * epsi && loop < 100) {
+		while (err > 0.9 * epsi && loop < 200) {
 			loop++;
 
 			// Set up Newton system
