@@ -1,27 +1,38 @@
+#define TIME true           // Set to false to turn of timings
+#define UmfLUSolver true    // Set to false for simple solver. (VW <= 256)
+#define MT true             // Multithread on
+
+#include <chrono>
 #include "MMASolver.h"
+#include <iostream>
+#include "util.cpp"
 #include "BoundaryCondition.cpp"
+#if UmfLUSolver
+#include <Eigen/UmfPackSupport>
+#endif
 #include "FVM.cpp"
 #include "adjoint.cpp"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
-#include <iostream>
 #include <fstream>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
 #include <numeric>
+#include <ctime>
+#if MT
+#include <omp.h>
+#endif
 
-template<typename T>
-void scale(T & v, int VW, int size){
-    for (int i = 0; i < size; i++) {
-        if (i < VW){ v[i] *= 0.5; }
-        else if (i > size - VW - 1){ v[i] *= 0.5; }
 
-        if (i % VW == 0){ v[i] *= 0.5; }
-        else if ((i + 1) % VW == 0) {v[i] *= 0.5; }
-    }
-}
+/**
+ *  Suitesparse solver, fastest option. Requires: Lapack, Openblas, SuiteSparse and OpenMP
+ *  g++ -O3 -fopenmp -I ./eigen/ -I ./SuiteSparse-master/include/ main.cpp MMASolver.cpp -lumfpack -o main.o
+ *
+ *  Normal solver, only requires EIGEN (but has speedup with lapack and openblas)
+ *  g++ -O3 -I ./eigen/ main.cpp MMASolver.cpp -o main.o
+ */
 
 class HeatEq
 {
@@ -39,24 +50,29 @@ public:
 
         std::vector<double> sol(VW_ * VH_);
         Eigen::SparseMatrix<double> K(VW_ * VH_, VW_ * VH_);
-
-        fvm(v, sol, K);
-        Print(sol);
-        f = std::accumulate(sol.begin(), sol.end(), 0.0);
-
-        K = K.transpose();
-        Eigen::VectorXd rhs(VW_ * VH_);
-        for (int i = 0; i < VW_ * VH_; i++){
-            rhs(i) = -1;
-        }
-        scale(rhs, VW_, rhs.rows());
-
         Eigen::VectorXd L(VW_ * VH_);
-        Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::NaturalOrdering<int>> solver;
-        solver.compute(K);
-        L = solver.solve(rhs);
+
+        auto t_start = std::chrono::system_clock::now();
+
+        fvm(v, sol, K, L);
+
+        #if TIME
+            auto t_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = t_end-t_start;
+            std::cout << "FVM took: " << diff.count() << " s" << std::endl;
+        #endif
+
+        t_start = std::chrono::system_clock::now();
 
         ag(v, L, sol, df);
+
+        #if TIME
+            t_end = std::chrono::system_clock::now();
+            diff = t_end-t_start;
+            std::cout << "ADJ took: " << diff.count() << " s" << std::endl;
+        #endif
+
+        f = std::accumulate(sol.begin(), sol.end(), 0.0);
 
         std::vector<double> vCopy(v);
         scale(vCopy, VW_, vCopy.size());
@@ -71,6 +87,12 @@ public:
         fvm(v, t, K);
     }
 
+    void update_p(int p){
+        std::cout << "Updated p to: " << p << std::endl;
+        p_ = p;
+        fvm.update_p(p);
+        ag.update_p(p);
+    }
 
 
 private:
@@ -82,34 +104,32 @@ private:
 
 };
 
-template <typename T>
-T Min(T d1, T d2) {
-    return d1<d2 ? d1 : d2;
-}
-
-template <typename T>
-T Max(T d1, T d2) {
-    return d1>d2 ? d1 : d2;
-}
-
-double Abs(double d1) {
-    return d1>0 ? d1 : -1.0*d1;
-}
-
-
 int main(int argc, char *argv[]) {
+
+    #if MT
+        int th = 4;
+        omp_set_num_threads(th);
+        Eigen::setNbThreads(th);
+    #endif
 
     double H = 1.0;
     double W = 1.0;
-    int VW = 10;
-    int VH = 10;
-    double Q = 200.0;
+    int VW = 1024;
+    int VH = 1024;
+    double Q = 20.0/0.001;
     double Cmet = 65.0;
     double Cpla = 0.2;
     double M = 0.4;
     int p = 1;
+    int p_max = 5;
 
-    std::vector<double> v(VW*VH, 0.1);
+    #if TIME
+    int max_iter = 1;
+    #else
+    int max_iter = 250;
+    #endif
+
+    std::vector<double> v(VW*VH, 0.0), v_old(v);
 
     BoundarySegment b1 = BoundarySegment(NEUMANN, 0, 1, 0);
     BoundaryCondition BcBottom(b1);
@@ -124,81 +144,72 @@ int main(int argc, char *argv[]) {
     BoundaryCondition BcTop(b1);
     BoundaryCondition BcLeft(SegVecRight);
 
-	int n = VW * VH;
-	int m = 1;
-	double movlim = 1.0;
-	int max_iter = 100;
+    int n = VW * VH;
+    double f, g, f_old = 0;
+    std::vector<double> df(n), dg(n);
+    HeatEq heateq(H, W, VW, VH, Q, Cmet, Cpla, p, M, BcBottom, BcRight, BcTop, BcLeft);
 
-    std::vector<double> v_old(v);
-    double f;
-    std::vector<double> df(n);
-    double g;
-    std::vector<double> dg(n);
-    std::vector<double> v_min(n, 0);
-    std::vector<double> v_max(n, 1);
+    int m = 1;
+    double movlim = 0.5;
+    double V_MIN = 0.0, V_MAX = 1.0;
+    std::vector<double> v_min(n, V_MIN), v_max(n, V_MAX);
+    MMASolver *mma = new MMASolver(n,m);
+    double ch = 1.0;
 
-	MMASolver *mma = new MMASolver(n,m);
-	HeatEq heateq(H, W, VW, VH, Q, Cmet, Cpla, p, M, BcBottom, BcRight, BcTop, BcLeft);
-
-	double ch = 1.0;
 	int itr = 0;
 	while (itr < max_iter) {
 		itr++;
-
 		heateq(v, f, df, g, dg);
-
-//        std::cout << "\n\n---------- f ----------\n\n";
-//        std::cout << f << std::endl;
-//        std::cout << "\n\n---------- g ----------\n\n";
-//        std::cout << g << std::endl;
-//        std::cout << "\n\n---------- df ----------\n\n";
-//		Print(df);
-//		std::cout << "\n\n--------- dg --------\n\n";
-//		Print(df);
 
 		// Set outer move limits
 		for (int i=0;i<n;i++) {
-			v_max[i] = Min(v_max[i], v[i] + movlim);
-			v_min[i] = Max(v_min[i], v[i] - movlim);
-		}
+			v_max[i] = min(V_MAX, v[i] + movlim);
+			v_min[i] = max(V_MIN, v[i] - movlim);
+        }
 
-		// Call the update method
-		double* v_arr = &v[0]; // Optimization works with arrays. Might change later.
-        double* df_arr = &df[0];
-        double* g_arr = &g;
-        double* dg_arr = &dg[0];
-        double* v_min_arr = &v_min[0];
-        double* v_max_arr = &v_max[0];
+        #if TIME
+		    auto t_start = std::chrono::system_clock::now();
+        #endif
 
-        mma->Update(v_arr,df_arr,g_arr,dg_arr,v_min_arr,v_max_arr);
+        mma->Update(v.data(), df.data(), &g, dg.data(), v_min.data(), v_max.data());
 
-		// Compute infnorm on design change
-		ch = 0.0;
-		for (int i=0;i<n;i++) {
-			ch = Max(ch,Abs(v[i]-v_old[i]));
-			v_old[i] = v[i];
-		}
+        #if TIME
+            auto t_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = t_end-t_start;
+            std::cout << "MMA up took: " << diff.count() << " s" << std::endl;
+        #endif
 
-		// Print to screen
+		ch = inf_norm_diff(v, v_old);
+		v_old = v;
+
+        // Update after x iterations. Better for large grids.
+//		if (itr % 50 == 0 && p < p_max){
+//		    heateq.update_p(++p);
+//		}
+
+        // Update if objective is not changing and constraint is below threshold
+        if (abs((f - f_old)) / n < 1e-6 && g < 1e-2 && p < p_max){
+            heateq.update_p(++p);
+        }
+
+        f_old = f;
 		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, ch);
 	}
 
-	std::cout << "v:";
-	for (int i=0;i<n;i++) {
-		std::cout << " " << v[i];
-	}
-	std::cout << std::endl;
 
 	std::vector<double> t(n);
 	heateq.solve_heat_eq(v, t);
 
 	std::ofstream file;
-	file.open("test.out");
+	file.open("result.out");
+
+	// Write v to file
 	for (int i = 0; i < n -1; i++) {
 	    file << v[i] << ",";
 	}
 	file << v[n - 1] << "\n";
 
+	// Write t to file
     for (int i = 0; i < n -1; i++) {
         file << t[i] << ",";
     }
@@ -211,4 +222,5 @@ int main(int argc, char *argv[]) {
 	return 0;
 
 }
+
 

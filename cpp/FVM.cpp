@@ -1,16 +1,17 @@
 //////////////////////////////////////////////
 ///Finite volume methode //Toon Huyck
 //////////////////////////////////////////////
-
-
 #include <assert.h>
 #include <iostream>
 #include <vector>
-#include <Eigen/Sparse>
-#include<Eigen/SparseQR>
-#include <Eigen/Dense>
-#include <Eigen/OrderingMethods>
+#include "Eigen/Sparse"
+#include "Eigen/SparseQR"
+#include "Eigen/Dense"
+#include "Eigen/OrderingMethods"
 
+#ifndef TIME
+#define TIME 0;
+#endif
 
 #ifndef DIRICHLET
 #define  DIRICHLET 0
@@ -63,13 +64,6 @@ SOL :: referentie naar solution vector
 #include <algorithm> //Transform
 #include <iostream> //Input en output
 
-void Print (const std::vector<double>& v) {
-    std::cout << "[" << v.size() << "] (";
-    for (int i=0; i<v.size();i++){
-      std::cout << v[i] << " ";
-  }
-  std::cout << ")" << std::endl;
-}
 
 //Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.
 //De functie houdt rekening met de kleine cell op de rand
@@ -91,8 +85,10 @@ class FVM
     std::vector<S> diagU1_; // de eerste, nevendiagonaal
     std::vector<S> diagU2_; // de verder gelegen diagonaal op afstand VW_ gelegen
     std::vector<S> RHS_; // Rechter zijde vh stelsel
-    
+
     //Overige parameters
+    int p_;
+
     S const H_; //Hoogte vh vierkant domein
     S const W_; //Breedte vh vierkant domein
     int const VW_; //Aantal cellen in de breedte
@@ -100,7 +96,6 @@ class FVM
     S const Q_; //oppervlakte warmte productie
     S const Cmet_; //materiaal coefficient van metaal
     S const Cpla_; // materiaal coefficient van plasiek
-    int const p_; //
     S const dx_;
     S const dy_;
     BoundaryCondition const BC0_; //De boundary objecten
@@ -124,10 +119,16 @@ class FVM
     }//Constructor
 
 
-    //Het opstellen van de vergelijkingen en testen
-    void operator()(std::vector<double> & v,  std::vector<double> & SOL, Eigen::SparseMatrix<double> & K)
+    void operator()(std::vector<double> const & v,  std::vector<double> & SOL, Eigen::SparseMatrix<double, 0> & K){
+        Eigen::VectorXd L;
+        (*this)(v, SOL, K, L, false);
+    }
+
+    void operator()(std::vector<double> const & v,  std::vector<double> & SOL, Eigen::SparseMatrix<double, 0> & K,
+            Eigen::VectorXd & L, bool l_solve = true)
     {
         reset();
+
         //Hulpvariable
         S C;
         S M;
@@ -423,20 +424,22 @@ class FVM
             RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*dy_/2;
         }
 
-//        std::cout<<"DIAG"<<std::endl;
+//        std::cout << "\n------------ FVM ---------------" << std::endl;
 //        Print(diag_);
-//        std::cout<<"RHS"<<std::endl;
-//        Print(RHS_);
+//        Print(diagU1_);
+//        Print(diagU2_);
+//        std::cout << "\n---------- FVM end -------------" << std::endl;
 
         //Constructie van K
-        for (int i = 0; i < VW_ * VH_; i++){
 
+
+        K.reserve(Eigen::VectorXi::Constant(VH_*VW_, 5));
+        for (int i = 0; i < VW_ * VH_; i++){
             K.insert(i, i) = diag_[i];
             if (i < VW_ * VH_ - 1) {
                 K.insert(i, i+1) = diagU1_[i];
                 K.insert(i + 1, i) = diagU1_[i];
             }
-
             if (i < VW_ * VH_ - VW_) {
                 K.insert(i, i + VW_) = diagU2_[i];
                 K.insert(i + VW_, i) = diagU2_[i];
@@ -444,7 +447,6 @@ class FVM
         }
 
         K.makeCompressed();
-
         Eigen::VectorXd RHS_E(VW_ * VH_);
         Eigen::VectorXd x;
 
@@ -452,14 +454,41 @@ class FVM
             RHS_E(i) = RHS_[i];
         }
 
-        Eigen::SparseQR<Eigen::SparseMatrix<double>, Eigen::NaturalOrdering<int>> solver;
+        // VW <= 256: SimplicialLDLT is fast enough
+        // VW >= 256: Use UmfPackLU. (SuiteSparse etc required). Has multi threading support.
+
+        #if UmfLUSolver
+            Eigen::UmfPackLU<Eigen::SparseMatrix<double>> solver;
+        #else
+            Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+        #endif
+
+        auto t_start = std::chrono::system_clock::now();
         solver.compute(K);
+
+        #if TIME
+            auto t_end = std::chrono::system_clock::now();
+            std::chrono::duration<double> diff = t_end-t_start;
+            std::cout << "Compute took: " << diff.count() << " s" << std::endl;
+        #endif
+
         x = solver.solve(RHS_E);
+
+        if (l_solve){
+            Eigen::VectorXd rhs(VW_ * VH_);
+            for (int i = 0; i < VW_ * VH_; i++) {
+                rhs(i) = -1;
+            }
+            scale(rhs, VW_, rhs.rows());
+            L = solver.solve(rhs);
+        }
 
         for (int i = 0; i < VW_ * VH_; i++){
             SOL[i] = x(i);
         }
-
     }
 
+    void update_p(int p){
+        p_ = p;
+    }
 };
