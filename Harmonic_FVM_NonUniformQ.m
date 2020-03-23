@@ -274,7 +274,7 @@ if BC3(1,1)=='D'
        dg(k) = dg(k) + PW;
 else %Neumann   
     C1 =  BC3(1,4)*dy/2;
-    k = 1+(VH-1)*VW;
+    k = 1;
     RHS(k) = RHS(k) + C1;
 end
 %%Interne Cellen

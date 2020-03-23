@@ -48,7 +48,7 @@ surf(reshape(AG,[VW,VH]));
 title("AG");
 subplot(1,3,2)
 surf(ERR1); 
-title("REL ERR1 TOV AVG");
+title("10 LOG REL ERR1 TOV AVG");
 xlabel("X"); ylabel("Y"); zlabel("ERROR1")
 subplot(1,3,3)
 surf(reshape(FDG,[VW,VH])); 
