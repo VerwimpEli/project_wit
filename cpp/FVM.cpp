@@ -463,7 +463,9 @@ class FVM
             Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
         #endif
 
-        auto t_start = std::chrono::system_clock::now();
+        #if TIME
+            auto t_start = std::chrono::system_clock::now();
+        #endif
         solver.compute(K);
 
         #if TIME

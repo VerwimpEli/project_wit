@@ -1,5 +1,4 @@
 % Test gemaakt om resultaten te kunnen vergelijken met c++
-%
 VB = 5;VH = 6; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 Varray = 1/2*ones(VB,VH); %Volledig metaal materiaal
 Q = 200;

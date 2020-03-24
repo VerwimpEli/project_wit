@@ -1,8 +1,14 @@
+#define TIME false           // Set to false to turn of timings
+#define UmfLUSolver false    // Set to false for simple solver. (VW <= 256)
+#define MT false             // Multithread on
+
+
 #include "BoundaryCondition.cpp"
 #include "FVM.cpp"
 #include "adjoint.cpp"
 #include  <Eigen/Sparse>
 #include <vector>
+#include "util.cpp"
 
 /**
  * Temporary version of Matlab scale function applied to -1 vector. VW might have to be VH, not sure.
@@ -31,11 +37,16 @@ int main(){
     double Cmet = 65.0;
     double Cpla = 0.2;
     double M = 0.4;
-    int p = 5;
+    int p = 2;
 
-    std::vector<double> mat(VW*VH, 0.2);
-
-
+    //std::vector<double> mat(VW*VH, 0.5);
+    std::vector<double> mat(VW*VH,0);
+    for (int i = 0; i< VW*VH; i++)
+    {
+        mat[i] = 0.4+i*(0.2)/(VW*VH-1);
+    }
+    std::cout << "\n\n---------- mat ----------\n\n";
+    Print(mat);
     // Boundary Conditions
 
     BoundarySegment b1 = BoundarySegment(NEUMANN, 0, 1, 0);

@@ -1,11 +1,12 @@
-clear;
+%clear;
 
 %Constanten %Mesh wordt volledig vierkant verondersteld %Speciale
 %Vierkanten aan de randen zodat de berekende temperaturen het volledige
 %domein insluiten
 VH = 25; VW = 25; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 %rng(500); %Reproduceerbaarheid
-Varray = ones(VW*VH,1)*0.5;
+%Varray = ones(VW*VH,1)*0.5;
+Varray = linspace(0.4,0.6,VW*VH)';
 v = reshape(Varray, [VW, VH]);
 
 %%%Boundary condition
@@ -66,5 +67,14 @@ function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
             Varray2 = Varray; Varray2(i) = Varray2(i)*(1+Delta);
             [FD_Sol, ~, ~, ~] =  Harmonic_heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
             J(i)= (FD_Sol - Sol)/(Delta*Varray(i)); %of is dit de gradient?
+    end
+end
+
+
+%%%Gradient in materiaal Array
+function v = material_gradient(VW,VH,Start,End)
+    v = ones(VW,VH);
+    for i = 1:VW
+        v(:,i) = Start + (i-1)/(VW-1)*(End-Start);
     end
 end
