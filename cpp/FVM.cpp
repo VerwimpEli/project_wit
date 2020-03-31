@@ -1,13 +1,17 @@
 //////////////////////////////////////////////
-///Finite volume methode //Toon Huyck
+///Finite volume methode     /////////////////
 //////////////////////////////////////////////
-#include <assert.h>
-#include <iostream>
-#include <vector>
-#include "Eigen/Sparse"
+//Defines en includes
+#include <assert.h> //Controle ect
+#include <iostream> //Input en output
+#include <vector> //Voor de vectoren te kunnen gebruiken
+#include "Eigen/Sparse" //Solver
 #include "Eigen/SparseQR"
 #include "Eigen/Dense"
 #include "Eigen/OrderingMethods"
+#include <math.h>  // std::pow
+#include <cmath>  // std::floor
+#include <algorithm> //Transform
 
 #ifndef TIME
 #define TIME 0;
@@ -48,22 +52,13 @@ BC2 = [['N',1,1,0];['N',2,VW-1,0];['N',VW,VW,0]]; %Boven geisoleerde rand
 BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker 
 p :: de simp parameter
 
-// INPUTS voor functie 
+// INPUTS voor functie /functor
+v :: 
 K :: Referentie naar spaarse matrix van V
 SOL :: referentie naar solution vector
 */
 
 //////OUTPUTS NA
-
-//Defines en includes
-#define NEUMANN 1
-#define DIRICHLET 0
-#include <vector> //Voor de vectoren te kunnen gebruiken
-#include <math.h>  // std::pow
-#include <cmath>  // std::floor
-#include <algorithm> //Transform
-#include <iostream> //Input en output
-
 
 //Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.
 //De functie houdt rekening met de kleine cell op de rand
@@ -103,6 +98,7 @@ class FVM
     BoundaryCondition const BC2_;
     BoundaryCondition const BC3_;
 
+    //functie om voor een functorcall alle gebruikte vector (voor de constructie van K) te reseten
     void reset(){
         std::fill(diag_.begin(), diag_.end(), 0.0);
         std::fill(diagU1_.begin(), diagU1_.end(), 0.0);
@@ -115,7 +111,21 @@ class FVM
     diag_(VW*VH), diagU1_(VW*VH), diagU2_(VW*VH), RHS_(VW*VH,Q*W_/(VW-1)*H_/(VH-1)), dx_(W_/(VW-1)), dy_(H_/(VH-1)),
     BC0_(BC0), BC1_(BC1), BC2_(BC2), BC3_(BC3)
     {
-        
+        std::fill(RHS_.begin(), RHS_.end(), Q_*dx_*dy_); //Initialisatie van RHS
+        //Berekenen van de RHS //Verschalen randen links en rechts want dit zijn kleinere volumes
+        for(int k = 0; k<VW_*VH_; k = k + VW_) 
+        {
+            RHS_[k] = RHS_[k]/2;
+            RHS_[k+VW_-1] = RHS_[k+VW_-1]/2;
+        }
+
+        for(int k = 0; k<VW_;k = k + 1) //Verschalen randen onder en boven 
+        {
+            RHS_[k] = RHS_[k]/2;
+            RHS_[k+VW_*(VH_-1)] = RHS_[k+VW_*(VH_-1)]/2;
+        }
+        //std::cout<<"RHS"<<std::endl;
+        //Print(RHS_); //Ziet er goed uit
     }//Constructor
 
 
@@ -139,25 +149,8 @@ class FVM
                 [Cmet_c = Cmet_, Cpla_c = Cpla_,p_c = p_](S ve) ->
                 S {return std::pow((1-ve),p_c)*Cpla_c + std::pow(ve,p_c)*Cmet_c;});
 
-        //Kleine Test
-        //Print(Material); //Ziet er OK uit
 
-        //Berekenen van de RHS hangt niet af van materiaal constante maar wel vd BC dus kan eventueel (deels) in de constructor geschreven worden
-        std::fill(RHS_.begin(), RHS_.end(), Q_*dx_*dy_); //Initialisatie van RHS
-        //Berekenen van de RHS //Verschalen randen links en rechts want dit zijn kleinere volumes
-        for(int k = 0; k<VW_*VH_; k = k + VW_) 
-        {
-            RHS_[k] = RHS_[k]/2;
-            RHS_[k+VW_-1] = RHS_[k+VW_-1]/2;
-        }
-
-        for(int k = 0; k<VW_;k = k + 1) //Verschalen randen onder en boven 
-        {
-            RHS_[k] = RHS_[k]/2;
-            RHS_[k+VW_*(VH_-1)] = RHS_[k+VW_*(VH_-1)]/2;
-        }
-
-        //Print(RHS_); //Ziet er goed uit
+        
         
         //Contributies voor de horizontale interface tussen cellen
         for(int i =0;i<VW_-1 ;i = i+1) //Over de breedte
@@ -187,8 +180,6 @@ class FVM
             diagU1_[i+(VH_-1)*VW_] = diagU1_[i+(VH_-1)*VW_] - C; // k = i+VW*(VH-1) //let op, dit is de matlab notatie
         }
 
-        //Print(diag_); //Tot hier ziet het er goed uit
-        //Print(diagU1_); //Tot hier ziet het er goed uit
 
         //Contributies voor de verticale interface tussen de cellen
         for(int j = 0; j<VH_-1;j = j +1)
@@ -222,8 +213,6 @@ class FVM
             
         }
         
-        //Print(diag_); //Ziet er OK uit voor homogene materialen
-        //Print(diagU2_); //Ziet er OK uit voor homogene materialen
 
 
         //AFHANDELEN VD BOUNDARY CONDITIONS
@@ -326,9 +315,6 @@ class FVM
             RHS_[VH_*VW_-1] = RHS_[VH_*VW_-1] + BC1_.GetStop().value()*dy_/2;
         }
 
-        //Print(diag_); //Ziet er oke uit voor 293 Dirichlet
-        //Print(RHS_); //Ziet er oke uit voor 293 Dirichlet 
-
         //BC2 - Boven
         //De kleine cell in het begin vd rand
         if(BC2_.GetStart().type() == DIRICHLET)
@@ -375,8 +361,6 @@ class FVM
             RHS_[VH_*VW_-1] = RHS_[VH_*VW_-1] + BC2_.GetStop().value()*dx_/2;
         }
 
-        //Print(diag_); //Ziet er oke uit voor homogene NEUMANN
-        //Print(RHS_); //Ziet er oke uit voor homogene NEUMANN
 
         //BC3 - LINKS
         //De kleine cell in het begin vd rand
@@ -430,9 +414,7 @@ class FVM
 //        Print(diagU2_);
 //        std::cout << "\n---------- FVM end -------------" << std::endl;
 
-        //Constructie van K
-
-
+        //Constructie van K uit de diagonalen
         K.reserve(Eigen::VectorXi::Constant(VH_*VW_, 5));
         for (int i = 0; i < VW_ * VH_; i++){
             K.insert(i, i) = diag_[i];
