@@ -408,13 +408,8 @@ class FVM
             RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*dy_/2;
         }
 
-//        std::cout << "\n------------ FVM ---------------" << std::endl;
-//        Print(diag_);
-//        Print(diagU1_);
-//        Print(diagU2_);
-//        std::cout << "\n---------- FVM end -------------" << std::endl;
 
-        //Constructie van K uit de diagonalen
+        // Constructie van K uit de diagonalen
         K.reserve(Eigen::VectorXi::Constant(VH_*VW_, 5));
         for (int i = 0; i < VW_ * VH_; i++){
             K.insert(i, i) = diag_[i];
@@ -439,7 +434,7 @@ class FVM
         // VW <= 256: SimplicialLDLT is fast enough
         // VW >= 256: Use UmfPackLU. (SuiteSparse etc required). Has multi threading support.
 
-        #if UmfLUSolver
+        #ifdef UmfLUSolver
             Eigen::UmfPackLU<Eigen::SparseMatrix<double>> solver;
         #else
             Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;

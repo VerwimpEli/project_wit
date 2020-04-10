@@ -1,14 +1,15 @@
 #define TIME false           // Set to false to turn of timings
-#define UmfLUSolver false    // Set to false for simple solver. (VW <= 256)
-#define MT false             // Multithread on
+//#define UmfLUSolver false    // Set to false for simple solver. (VW <= 256)
+//#define MT false             // Multithread on
 
 
+#include <iostream>
 #include "BoundaryCondition.cpp"
+#include "util.cpp"
 #include "FVM.cpp"
 #include "adjoint.cpp"
 #include  <Eigen/Sparse>
 #include <vector>
-#include "util.cpp"
 
 /**
  * Temporary version of Matlab scale function applied to -1 vector. VW might have to be VH, not sure.

@@ -1,13 +1,11 @@
-#define TIME true           // Set to false to turn of timings
-#define UmfLUSolver false    // Set to false for simple solver. (VW <= 256)
-#define MT true             // Multithread on
+#define TIME false           // Set to false to turn of timings
 
 #include <chrono>
 #include "MMASolver.h"
 #include <iostream>
 #include "util.cpp"
 #include "BoundaryCondition.cpp"
-#if UmfLUSolver
+#ifdef UmfLUSolver
 #include <Eigen/UmfPackSupport>
 #endif
 #include "FVM.cpp"
@@ -22,9 +20,8 @@
 #include <cmath>
 #include <numeric>
 #include <ctime>
-#if MT
-#include <omp.h>
-#endif
+#include <string>
+
 
 
 /**
@@ -107,16 +104,27 @@ private:
 
 int main(int argc, char *argv[]) {
 
-    #if MT
-        int th = 4;
-        omp_set_num_threads(th);
-        Eigen::setNbThreads(th);
-    #endif
+    int max_iter, VW, VH;
+
+    if(argc == 1){
+        max_iter = 500;
+        VW = 32;
+        VH = 32;
+    } else if (argc == 2){
+        max_iter = std::atoi(argv[1]);
+        VW = 32;
+        VH = 32;
+    } else if (argc == 3){
+        max_iter = std::atoi(argv[1]);
+        VW = std::atoi(argv[2]);
+        VH = VW;
+    } else {
+        std::cout << "Too many arguments" << std::endl;
+        exit(1);
+    }
 
     double H = 1.0;
     double W = 1.0;
-    int VW = 32;
-    int VH = 32;
     double Q = 20.0/0.001;
     double Cmet = 65.0;
     double Cpla = 0.2;
@@ -125,9 +133,7 @@ int main(int argc, char *argv[]) {
     int p_max = 5;
 
     #if TIME
-    int max_iter = 1;
-    #else
-    int max_iter = 250;
+    max_iter = 1;
     #endif
 
     std::vector<double> v(VW*VH, 0.0), v_old(v);
@@ -202,7 +208,13 @@ int main(int argc, char *argv[]) {
 	heateq.solve_heat_eq(v, t);
 
 	std::ofstream file;
-	file.open("../results/result.out");
+    std::time_t tm = std::time(0);
+    std::tm* now = std::localtime(&tm);
+    char f_name[40];
+    std::cout << f_name << std::endl;
+    std::strftime(f_name, 40, "./results/result_%d_%H%M%S.out", now);
+    std::cout << f_name << std::endl;
+	file.open(f_name);
 
 	// Write v to file
 	for (int i = 0; i < n -1; i++) {
@@ -217,6 +229,9 @@ int main(int argc, char *argv[]) {
     file << t[n - 1] << "\n";
 
 	file.close();
+
+
+	std::cout << now->tm_mday << "-" << now->tm_hour << "-" << now->tm_min << std::endl;
 
 	// Deallocate
 	delete mma;

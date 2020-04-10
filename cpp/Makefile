@@ -1,6 +1,7 @@
 CXX = g++
-CXXFLAGS = -O3 -fopenmp -g
-INCLUDE = -I./dependencies/eigen/ 
+CXXFLAGS = -O3
+UMFFLAG = -DUmfLUSolver
+INCLUDE = -I./dependencies/eigen/ -I./src/
 INCLUDESS = -I./dependencies/Linux/SuiteSparse/include/
 LIBINCLUDE = -L ./dependencies/Linux/SuiteSparse/lib
 LDFLAGS = -lumfpack -lamd -lsuitesparseconfig -lm
@@ -14,8 +15,18 @@ main.o: src/main.cpp
 MMASolver.o: src/MMASolver.cpp
 	$(CXX) $(CXXFLAGS) -c src/MMASolver.cpp
 
-main_umf: main.o MMASolver.o
-	$(CXX) $(CXXFLAGS) $(INCLUDE) $(INCLUDESS) $(LIBINCLUDE)  -o apps/main_umf main.o MMASolver.o $(LDFLAGS)  
+main_umf: main_umf.o MMASolver.o
+	$(CXX) $(CXXFLAGS) $(UMFFLAG) $(INCLUDE) $(INCLUDESS) $(LIBINCLUDE)  -o apps/main_umf main_umf.o MMASolver.o $(LDFLAGS)  
+
+main_umf.o: src/main.cpp
+	$(CXX) $(CXXFLAGS) $(UMFFLAG) $(INCLUDE) $(INCLUDESS) -c src/main.cpp -o main_umf.o 
+
+fvm_adjoint_test: 
+	$(CXX) $(CXXFLAGS) $(INCLUDE) test/fvm_adjoint_test.cpp -o apps/fvm_adjoint_test
+
+test: fvm_adjoint_test
+
+all: main_umf main fvm_adjoint_test
 
 clean:
 	-rm *.o
