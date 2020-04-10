@@ -1,5 +1,5 @@
 #define TIME true           // Set to false to turn of timings
-#define UmfLUSolver true    // Set to false for simple solver. (VW <= 256)
+#define UmfLUSolver false    // Set to false for simple solver. (VW <= 256)
 #define MT true             // Multithread on
 
 #include <chrono>
@@ -12,6 +12,7 @@
 #endif
 #include "FVM.cpp"
 #include "adjoint.cpp"
+#include "MMASolver.h"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <fstream>
@@ -114,8 +115,8 @@ int main(int argc, char *argv[]) {
 
     double H = 1.0;
     double W = 1.0;
-    int VW = 1024;
-    int VH = 1024;
+    int VW = 32;
+    int VH = 32;
     double Q = 20.0/0.001;
     double Cmet = 65.0;
     double Cpla = 0.2;
@@ -201,7 +202,7 @@ int main(int argc, char *argv[]) {
 	heateq.solve_heat_eq(v, t);
 
 	std::ofstream file;
-	file.open("result.out");
+	file.open("../results/result.out");
 
 	// Write v to file
 	for (int i = 0; i < n -1; i++) {
