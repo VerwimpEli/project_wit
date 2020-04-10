@@ -1,36 +1,17 @@
-#define TIME false           // Set to false to turn of timings
+//#define TIME false           // Set to false to turn of timings
 
 #include <chrono>
-#include "MMASolver.h"
 #include <iostream>
-#include "util.cpp"
-#include "BoundaryCondition.cpp"
-#ifdef UmfLUSolver
-#include <Eigen/UmfPackSupport>
-#endif
-#include "FVM.cpp"
-#include "adjoint.cpp"
 #include "MMASolver.h"
+#include "util.h"
+#include "BoundaryCondition.h"
+#include "adjoint.cpp"
+#include "FVM.cpp"
 #include <Eigen/Sparse>
 #include <Eigen/Dense>
 #include <fstream>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <cmath>
 #include <numeric>
-#include <ctime>
-#include <string>
 
-
-
-/**
- *  Suitesparse solver, fastest option. Requires: Lapack, Openblas, SuiteSparse and OpenMP
- *  g++ -O3 -fopenmp -I ./eigen/ -I ./SuiteSparse-master/include/ main.cpp MMASolver.cpp -lumfpack -o main.o
- *
- *  Normal solver, only requires EIGEN (but has speedup with lapack and openblas)
- *  g++ -O3 -I ./eigen/ main.cpp MMASolver.cpp -o main.o
- */
 
 class HeatEq
 {
@@ -54,17 +35,16 @@ public:
 
         fvm(v, sol, K, L);
 
-        #if TIME
+        #ifdef TIME
             auto t_end = std::chrono::system_clock::now();
             std::chrono::duration<double> diff = t_end-t_start;
             std::cout << "FVM took: " << diff.count() << " s" << std::endl;
         #endif
 
         t_start = std::chrono::system_clock::now();
-
         ag(v, L, sol, df);
 
-        #if TIME
+        #ifdef TIME
             t_end = std::chrono::system_clock::now();
             diff = t_end-t_start;
             std::cout << "ADJ took: " << diff.count() << " s" << std::endl;
@@ -132,7 +112,7 @@ int main(int argc, char *argv[]) {
     int p = 1;
     int p_max = 5;
 
-    #if TIME
+    #ifdef TIME
     max_iter = 1;
     #endif
 
@@ -174,16 +154,16 @@ int main(int argc, char *argv[]) {
 			v_min[i] = max(V_MIN, v[i] - movlim);
         }
 
-        #if TIME
-		    auto t_start = std::chrono::system_clock::now();
+        #ifdef TIME
+        auto t_start = std::chrono::system_clock::now();
         #endif
 
         mma->Update(v.data(), df.data(), &g, dg.data(), v_min.data(), v_max.data());
 
-        #if TIME
-            auto t_end = std::chrono::system_clock::now();
-            std::chrono::duration<double> diff = t_end-t_start;
-            std::cout << "MMA up took: " << diff.count() << " s" << std::endl;
+        #ifdef TIME
+        auto t_end = std::chrono::system_clock::now();
+        std::chrono::duration<double> diff = t_end-t_start;
+        std::cout << "MMA took: " << diff.count() << " s" << std::endl;
         #endif
 
 		ch = inf_norm_diff(v, v_old);
@@ -200,10 +180,12 @@ int main(int argc, char *argv[]) {
         }
 
         f_old = f;
+#ifndef TIME
 		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, ch);
+#endif
 	}
 
-
+#ifndef TIME
 	std::vector<double> t(n);
 	heateq.solve_heat_eq(v, t);
 
@@ -211,9 +193,9 @@ int main(int argc, char *argv[]) {
     std::time_t tm = std::time(0);
     std::tm* now = std::localtime(&tm);
     char f_name[40];
-    std::cout << f_name << std::endl;
-    std::strftime(f_name, 40, "./results/result_%d_%H%M%S.out", now);
-    std::cout << f_name << std::endl;
+
+    std::strftime(f_name, 40, "./results/result_%j_%H%M%S.out", now);
+
 	file.open(f_name);
 
 	// Write v to file
@@ -229,10 +211,7 @@ int main(int argc, char *argv[]) {
     file << t[n - 1] << "\n";
 
 	file.close();
-
-
-	std::cout << now->tm_mday << "-" << now->tm_hour << "-" << now->tm_min << std::endl;
-
+#endif
 	// Deallocate
 	delete mma;
 	return 0;

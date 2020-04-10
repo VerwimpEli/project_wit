@@ -1,6 +1,9 @@
 //////////////////////////////////////////////
 ///Finite volume methode     /////////////////
 //////////////////////////////////////////////
+#ifndef CPP_FVM
+#define CPP_FVM
+
 //Defines en includes
 #include <assert.h> //Controle ect
 #include <iostream> //Input en output
@@ -12,19 +15,12 @@
 #include <math.h>  // std::pow
 #include <cmath>  // std::floor
 #include <algorithm> //Transform
+#include "util.h"
+#include "BoundaryCondition.h"
 
-#ifndef TIME
-#define TIME 0;
+#ifdef UmfLUSolver
+#include <Eigen/UmfPackSupport>
 #endif
-
-#ifndef DIRICHLET
-#define  DIRICHLET 0
-#endif
-
-#ifndef NEUMANN
-#define  NEUMANN 1
-#endif
-
 
 //VERVOLG FVM
 
@@ -440,17 +436,7 @@ class FVM
             Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
         #endif
 
-        #if TIME
-            auto t_start = std::chrono::system_clock::now();
-        #endif
         solver.compute(K);
-
-        #if TIME
-            auto t_end = std::chrono::system_clock::now();
-            std::chrono::duration<double> diff = t_end-t_start;
-            std::cout << "Compute took: " << diff.count() << " s" << std::endl;
-        #endif
-
         x = solver.solve(RHS_E);
 
         if (l_solve){
@@ -471,3 +457,5 @@ class FVM
         p_ = p;
     }
 };
+
+#endif

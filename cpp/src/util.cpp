@@ -1,5 +1,10 @@
+#ifndef CPP_UTIL_H
+#define CPP_UTIL_H
+
 #include <iomanip>
+#include <iostream>
 #include <string>
+#include <vector>
 
 template<typename T>
 void scale(T & v, int VW, int size){
@@ -33,9 +38,6 @@ double abs_v(double x){
     return x > 0 ?  x : -1*x;
 }
 
-/**
- * Returns max(v - v_old)
- */
 double inf_norm_diff(std::vector<double> const &v, std::vector<double> const & v_old){
     double ch = 0.0;
     for (int i=0; i < v.size(); i++){
@@ -63,4 +65,5 @@ void Print(double v, std::string name){
     std::cout << name << ":\t" << v << std::endl;
 }
 
+#endif
 

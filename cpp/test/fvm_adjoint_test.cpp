@@ -4,8 +4,8 @@
 
 
 #include <iostream>
-#include "BoundaryCondition.cpp"
-#include "util.cpp"
+#include "BoundaryCondition.h"
+#include "util.h"
 #include "FVM.cpp"
 #include "adjoint.cpp"
 #include  <Eigen/Sparse>

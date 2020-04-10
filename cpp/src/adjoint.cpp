@@ -1,3 +1,6 @@
+#ifndef CPP_ADJOINT
+#define CPP_ADJOINT
+
 #include <iostream>
 #include <cstdio>
 #include <cstdlib>
@@ -198,3 +201,4 @@ class AdjointGradient {
         }
 };
 
+#endif
