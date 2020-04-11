@@ -56,6 +56,7 @@ On smaller grids there is an overhead, but for grids larger than 256 this solver
 be used. Details are the same as the main program.
 
 The **time_main_(umf)** programs run one iteration of the main programs and record the time
-needed to solve one FVM calculation, one adjoint calculation and one MMA optimization step.
+needed to solve one FVM calculation, one adjoint calculation and one MMA optimization step. 
+Have the same options as main programs, but the first (`max_iterations`) is ignored.
 
 ### Tests
