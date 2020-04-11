@@ -95,14 +95,14 @@ for i = 1:size(Mesh,2)
 
     [Sol,K] = FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
     SOL = reshape(Sol,[Mesh(i),VH]);
-    Sol_Theo = T_theo_neumann(20/65,20,Q,1,Mesh(i),65);
+    Sol_Theo = T_theo_neumann(-20/65,20,Q,1,Mesh(i),65);
     Error(i) = max(abs(SOL(:,1)-Sol_Theo')); %MaxNorm
     %Error(i) = norm(abs(SOL(:,1)-Sol_Theo'))/Mesh(i); %grid 2-Norm
 end
 %semilogy(Dx,Error); %verkeerde soort plot voor het juiste verband te zien
 figure(6); loglog(Dx,Error); hold on; grid on; 
-title("2De orde convergentie voor testprobleem met neumann randvoorwaarde");
-xlabel("\Deltax"); ylabel("2-Norm van de error / n");
+title(" convergentie voor testprobleem met neumann randvoorwaarde");
+xlabel("\Deltax"); ylabel("Max-Norm van de error / n");
 
 
 %%%HULPFUNCTIES
