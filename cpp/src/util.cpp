@@ -29,9 +29,10 @@ T max(T v1, T v2){
 
 double max(std::vector<double> v){
     double result = v[0];
-    for (int i = 1; i < v.size(); i++){
+    for (size_t i = 1; i < v.size(); i++){
         result = v[i] > result ? v[i] : result;
     }
+    return result;
 }
 
 double abs_v(double x){
@@ -40,7 +41,7 @@ double abs_v(double x){
 
 double inf_norm_diff(std::vector<double> const &v, std::vector<double> const & v_old){
     double ch = 0.0;
-    for (int i=0; i < v.size(); i++){
+    for (size_t i=0; i < v.size(); i++){
         ch = max(ch,abs_v(v[i] - v_old[i]));
     }
     return ch;
@@ -49,7 +50,7 @@ double inf_norm_diff(std::vector<double> const &v, std::vector<double> const & v
 void Print(const std::vector<double>& v) {
     std::cout.precision(16);
     std::cout << "[" << v.size() << "] (\t";
-    for (int i=0; i<v.size();i++){
+    for (size_t i=0; i<v.size();i++){
         std::cout << v[i] << " ";
     }
     std::cout << ")" << std::endl;

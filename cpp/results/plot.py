@@ -20,14 +20,19 @@ def main():
 	
 	with open(file_name, "r") as f:
 		v = [float(x) for x in f.readline().rstrip().split(",")]
-	#    t = [float(x) for x in f.readline().rstrip().split(",")]
+		t = [float(x) for x in f.readline().rstrip().split(",")]
+
+	t_min, t_max = np.min(t), np.max(t)
 
 	v = np.array(v).reshape((VW, VH))
-	#t = np.array(t).reshape((VW, VH))
+	t = np.array(t).reshape((VW, VH))
 
-	fig, ax1 = plt.subplots(1, 1)
+	fig, (ax1, ax2) = plt.subplots(1, 2)
 	vs = ax1.imshow(v, extent=[0, 1, 0, 1], vmin=0, vmax=1)
+	ts = ax2.imshow(t, extent=[0, 1, 0, 1], vmin=t_min, vmax=t_max)
+
 	fig.colorbar(vs, ax=ax1)
+	fig.colorbar(ts, ax=ax2)
 
 	plt.show()
 

@@ -18,7 +18,7 @@ class HeatEq
 public:
     HeatEq(double H, double W, int VW, int VH, double Q, double Cmet, double Cpla, int p, double M,
            BoundaryCondition BC0, BoundaryCondition BC1, BoundaryCondition BC2, BoundaryCondition BC3)
-            : H_(H), W_(W), Cmet_(Cmet), Cpla_(Cpla), VW_(VW), VH_(VH), p_(p), Q_(Q), M_(M),
+            : H_(H), W_(W), Cmet_(Cmet), Cpla_(Cpla), Q_(Q), M_(M),  VW_(VW), VH_(VH), p_(p),
               BC0_(BC0), BC1_(BC1), BC2_(BC2), BC3_(BC3),
               fvm(H, W, VW, VH, Q, Cmet, Cpla, p, BC0, BC1, BC2, BC3),
               ag(W, H, VW, VH, M, Q, Cmet, Cpla, p)
@@ -105,7 +105,7 @@ int main(int argc, char *argv[]) {
 
     double H = 1.0;
     double W = 1.0;
-    double Q = 20.0/0.001;
+    double Q = 2/0.001;
     double Cmet = 65.0;
     double Cpla = 0.2;
     double M = 0.4;
@@ -141,7 +141,6 @@ int main(int argc, char *argv[]) {
     double V_MIN = 0.0, V_MAX = 1.0;
     std::vector<double> v_min(n, V_MIN), v_max(n, V_MAX);
     MMASolver *mma = new MMASolver(n,m);
-    double ch = 1.0;
 
 	int itr = 0;
 	while (itr < max_iter) {
@@ -166,7 +165,6 @@ int main(int argc, char *argv[]) {
         std::cout << "MMA took: " << diff.count() << " s" << std::endl;
         #endif
 
-		ch = inf_norm_diff(v, v_old);
 		v_old = v;
 
         // Update after x iterations. Better for large grids.
@@ -175,13 +173,13 @@ int main(int argc, char *argv[]) {
 //		}
 
         // Update if objective is not changing and constraint is below threshold
-        if (abs((f - f_old)) / n < 1e-6 && g < 1e-2 && p < p_max){
+        if (abs((f - f_old)) / n < 1e-4 && g < 1e-2 && p < p_max){
             heateq.update_p(++p);
         }
 
         f_old = f;
 #ifndef TIME
-		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, ch);
+		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, inf_norm_diff(v, v_old));
 #endif
 	}
 
@@ -194,7 +192,7 @@ int main(int argc, char *argv[]) {
     std::tm* now = std::localtime(&tm);
     char f_name[40];
 
-    std::strftime(f_name, 40, "./results/result_%j_%H%M%S.out", now);
+    std::strftime(f_name, 40, "../results/result_%j_%H%M%S.out", now);
 
 	file.open(f_name);
 

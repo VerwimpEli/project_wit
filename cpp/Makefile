@@ -45,15 +45,7 @@ time_main_umf: time_main_umf.o MMASolver.o util.o BoundaryCondition.o
 test: fvm_adjoint_test
 
 
-all: main_umf main fvm_adjoint_test
+all: main_umf main fvm_adjoint_test time_main time_main_umf
 
 clean:
 	-rm *.o
-
-# /**
-#  *  Suitesparse solver, fastest option. Requires: Lapack, Openblas, SuiteSparse and OpenMP
-#  *  g++ -O3 -fopenmp -I ./eigen/ -I ./SuiteSparse-master/include/ main.cpp MMASolver.cpp -lumfpack -o main.o
-#  *
-#  *  Normal solver, only requires EIGEN (but has speedup with lapack and openblas)
-#  *  g++ -O3 -I ./eigen/ main.cpp MMASolver.cpp -o main.o
-#  */

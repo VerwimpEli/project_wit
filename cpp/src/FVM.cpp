@@ -71,14 +71,6 @@ template<typename S> //type scalar dat gebruikt wordt voor berekeneningen
 class FVM
 {
     private: 
-    //Diagonalen
-    std::vector<S> diag_; //De hoofd diagonaal
-    std::vector<S> diagU1_; // de eerste, nevendiagonaal
-    std::vector<S> diagU2_; // de verder gelegen diagonaal op afstand VW_ gelegen
-    std::vector<S> RHS_; // Rechter zijde vh stelsel
-
-    //Overige parameters
-    int p_;
 
     S const H_; //Hoogte vh vierkant domein
     S const W_; //Breedte vh vierkant domein
@@ -87,14 +79,23 @@ class FVM
     S const Q_; //oppervlakte warmte productie
     S const Cmet_; //materiaal coefficient van metaal
     S const Cpla_; // materiaal coefficient van plasiek
+    int p_;
     S const dx_;
     S const dy_;
-    BoundaryCondition const BC0_; //De boundary objecten
+
+    // Diagonalen
+    std::vector<S> diag_; //De hoofd diagonaal
+    std::vector<S> diagU1_; // de eerste, nevendiagonaal
+    std::vector<S> diagU2_; // de verder gelegen diagonaal op afstand VW_ gelegen
+    std::vector<S> RHS_; // Rechter zijde vh stelsel
+
+    // De boundary objecten
+    BoundaryCondition const BC0_;
     BoundaryCondition const BC1_;
     BoundaryCondition const BC2_;
     BoundaryCondition const BC3_;
 
-    //functie om voor een functorcall alle gebruikte vector (voor de constructie van K) te reseten
+    // functie om voor een functorcall alle gebruikte vector (voor de constructie van K) te reseten
     void reset(){
         std::fill(diag_.begin(), diag_.end(), 0.0);
         std::fill(diagU1_.begin(), diagU1_.end(), 0.0);
@@ -103,25 +104,11 @@ class FVM
     
     public:
     FVM(S H, S W, int VW, int VH, S Q, S Cmet, S Cpla, int p, BoundaryCondition BC0, BoundaryCondition BC1, BoundaryCondition BC2, BoundaryCondition BC3)
-    :H_(H), W_(W), VW_(VW), VH_(VH), Q_(Q), Cmet_(Cmet), Cpla_(Cpla), p_(p),
-    diag_(VW*VH), diagU1_(VW*VH), diagU2_(VW*VH), RHS_(VW*VH,Q*W_/(VW-1)*H_/(VH-1)), dx_(W_/(VW-1)), dy_(H_/(VH-1)),
+    :H_(H), W_(W), VW_(VW), VH_(VH), Q_(Q), Cmet_(Cmet), Cpla_(Cpla), p_(p), dx_(W_/(VW-1)), dy_(H_/(VH-1)),
+    diag_(VW*VH), diagU1_(VW*VH), diagU2_(VW*VH), RHS_(VW*VH,Q*W_/(VW-1)*H_/(VH-1)),
     BC0_(BC0), BC1_(BC1), BC2_(BC2), BC3_(BC3)
     {
-        std::fill(RHS_.begin(), RHS_.end(), Q_*dx_*dy_); //Initialisatie van RHS
-        //Berekenen van de RHS //Verschalen randen links en rechts want dit zijn kleinere volumes
-        for(int k = 0; k<VW_*VH_; k = k + VW_) 
-        {
-            RHS_[k] = RHS_[k]/2;
-            RHS_[k+VW_-1] = RHS_[k+VW_-1]/2;
-        }
 
-        for(int k = 0; k<VW_;k = k + 1) //Verschalen randen onder en boven 
-        {
-            RHS_[k] = RHS_[k]/2;
-            RHS_[k+VW_*(VH_-1)] = RHS_[k+VW_*(VH_-1)]/2;
-        }
-        //std::cout<<"RHS"<<std::endl;
-        //Print(RHS_); //Ziet er goed uit
     }//Constructor
 
 
@@ -146,8 +133,21 @@ class FVM
                 S {return std::pow((1-ve),p_c)*Cpla_c + std::pow(ve,p_c)*Cmet_c;});
 
 
-        
-        
+        std::fill(RHS_.begin(), RHS_.end(), Q_*dx_*dy_); //Initialisatie van RHS
+        //Berekenen van de RHS //Verschalen randen links en rechts want dit zijn kleinere volumes
+        for(int k = 0; k<VW_*VH_; k = k + VW_)
+        {
+            RHS_[k] = RHS_[k]/2;
+            RHS_[k+VW_-1] = RHS_[k+VW_-1]/2;
+        }
+
+        for(int k = 0; k<VW_;k = k + 1) //Verschalen randen onder en boven
+        {
+            RHS_[k] = RHS_[k]/2;
+            RHS_[k+VW_*(VH_-1)] = RHS_[k+VW_*(VH_-1)]/2;
+        }
+
+
         //Contributies voor de horizontale interface tussen cellen
         for(int i =0;i<VW_-1 ;i = i+1) //Over de breedte
         {
