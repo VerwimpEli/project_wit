@@ -1,18 +1,22 @@
-%clear;
-
-%Constanten %Mesh wordt volledig vierkant verondersteld %Speciale
-%Vierkanten aan de randen zodat de berekende temperaturen het volledige
-%domein insluiten
+clear;
+%Testcase for the testing the adjoint method (used for calculation of the
+%gradient) by comparision with a finite difference approxition. Also used
+%to generate a FVM solution and gradient for comparison with the cpp
+%implementation
+%REMARK 1 check if the cpp programme is using the same parameters
+%Q,BC's,...
+%REMARK 2 Use a non -random, non homogeneous material, to check if all
+%matrial selection indices are correct.
+%REMARK 3 Location which cells belong to a given BC is implemented
+%different is cpp. Therefore some difference might be possible for special meshes. 
+%This is not the case for (eg 25x25)
 VH = 25; VW = 25; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
-%rng(500); %Reproduceerbaarheid
-%Varray = ones(VW*VH,1)*0.5;
-Varray = linspace(0.4,0.6,VW*VH)';
+Varray = linspace(0.4,0.6,VW*VH)'; %Equispaced tussen 0.4 en 0.6
 v = reshape(Varray, [VW, VH]);
 
 %%%Boundary condition
-
 VDB = 0.3 * VH + 1;   % Dirichlet begin and end
-VDE = VH - 0.3 * VH;
+VDE = VH - 0.3 * VH;    
 
 BC0 = [['N',1,1,0]; ['N',2,VW-1,0]; ['N',VW,VW,0]];     % Onder
 BC1 = [['N',1,1,0]; ['N',2,VDB-1,0]; ['D',VDB, VDE, 293]; ['N',VDE+1,VH-1, 0]; ['N',VH,VH,0]];    % Rechts 
@@ -27,7 +31,8 @@ p = 2;
 [Sol,K] = Harmonic_FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 
 
-%Visualisatie %Heel ruw komt niet direct overeen met echte systeem
+%Visualisatie %Heel ruw komt niet direct overeen met echte systeem door
+%speciale Mesh
 SOL = reshape(Sol,[VW,VH]);
 % figure(1);
 % surf(SOL); 

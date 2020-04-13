@@ -2,13 +2,15 @@ clear; clc;
 
 %Script dat enkele testen uitvoerd om de correctheid van de functie
 %Harmonic_FVM te testen.
+%Script for verification of the code.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%                TEST CASE 1 : 3 STRIPS OF MATERIAL       %%%%%%%%%
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %3 verschillende stroken materiaal ter controlen dat de de juiste materiaal
-%parameters geselecteerd worden. er zouden 3 duidemijke gradienten in de
-%temperatuur moeten zijn
+%parameters geselecteerd worden. 
+%Simulation of plate consiting of 3 stripes of metal. There should be 3 distict regions with the
+%gradient over the plastic region. This verifies material selection.
  VB = 24;VH = 24; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
  Varray = ones(VB,VH); %Volledig metaal materiaal
  Varray(1/3*VB:2/3*VB-1,:) = zeros(VB/3,VH);
@@ -27,7 +29,11 @@ clear; clc;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Simulatie van een uniforme plaat met aan 2 zijde isolatie en 2 zijde een
 %opgelegde temperatuur. Door inwendige warmte generatie wordt er een
-%parabool profiel aangemaakt door FVM
+%parabool profiel aangemaakt door FVM. De berekende waarden liggen exact op
+%dit profiel
+%Simulation of a uniform plate with on 2 opposide side isolation (neumann =
+%0) and 2 given temperatures. As result of the uniform heat production
+%within the plate, the solution is a parabola. 
 VH = 5; VB = 24; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 Varray = ones(VB,VH); %Volledig metaal materiaal
 Q = 200;
@@ -51,6 +57,8 @@ plot(SOL(:,1)-Sol_Theo'); title("Test Case 2 : verschil tussen  Harmonic_FVM en 
  %De 2de testcase wordt herhaald met verschillende meshes. Gezien de
  %eigenschappen van de methode zou de parabool telkens exact geinterpoleerd
  %moeten worden %dit is dus gewoon nul berekenen!
+ %Convergence of the 2nd test case. 
+ %Test case 2 for different meshes. Result should still be zero for all. 
 Mesh = 5:5:500;
 Dx = 1./(Mesh-1);
 Error = zeros(size(Mesh));
@@ -76,6 +84,9 @@ xlabel("\Deltax"); ylabel("2-Norm van de error / n");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% TEST CASE 4 : NEUMANN : BC
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%Testcase for a non-zero neumann Boundary condition. The resulting
+%solutions is linear. And the solutions found are therefor exact. relative error should 
+%be zero.  
 VH = 5; VB = 24; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
 Varray = ones(VB,VH); %Volledig metaal materiaal
 Q = 0;
@@ -97,7 +108,7 @@ plot(SOL(:,1)-Sol_Theo');  title("TestCase 4 : Verschil met theoretische oplossi
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% TEST CASE 5 : NEUMANN : BC - Convergentie
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Convergentie van Test Case 4 voor verschillende meshes.
+%Testcase 4 for different meshes. The relative error should always be zero.
 Mesh = 5:5:1000;
 Dx = 1./(Mesh-1);
 Error = zeros(size(Mesh));
@@ -110,7 +121,7 @@ for i = 1:size(Mesh,2)
     BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
     BC3 = [['N',1,1,20];['N',2,VH-1,20];['N',VH,VH,20]];% Linker 
 
-    [Sol,K] = FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+    [Sol,K] = Harmonic_FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
     SOL = reshape(Sol,[Mesh(i),VH]);
     Sol_Theo = T_theo_neumann(-20/65,20,Q,1,Mesh(i),65);
     Error(i) = max(abs(SOL(:,1)-Sol_Theo')); %MaxNorm
@@ -124,8 +135,10 @@ xlabel("\Deltax"); ylabel("Max-Norm van de error / n");
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%%%%%%% TEST CASE 6 : Niet uniforme Q
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%Convergentie voor Uniform materiaal met een niet uniforme warmte verdeling
-
+%Convergentie for a Uniform material with non uniform heat production
+%The exact solution is a 3de orde polynomial. Due to the non unformness of
+%the heat production the solution is no longer exact. First order
+%convergece should be seen.
 Mesh = 5:5:500;
 Dx = 1./(Mesh-1);
 Error = zeros(size(Mesh));

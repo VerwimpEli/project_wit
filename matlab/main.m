@@ -103,9 +103,9 @@ imagesc(flip(v'))
 colorbar;
 
 % Inital temp
-tsol0 = FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+tsol0 = Harmonic_FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
 % Final temp
-tsol  = FVM(VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+tsol  = Harmonic_FVM(VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
 
 maxt = max(tsol0);
 mint = min(tsol0);
