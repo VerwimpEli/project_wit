@@ -143,7 +143,7 @@ end
 
 %%%%%%%%%%%%%%%BC
 %%%%Boundary conditions onder
-PW= 10^8; %Penaltywaarde
+PW= 10^7*max(dg); %Penaltywaarde
 %Kleine Cell
 if BC0(1,1)=='D'
        k = 1;
