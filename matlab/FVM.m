@@ -3,12 +3,14 @@
 %topolisation/optimasation. elk volume heeft zijn eigen
 %materiaal(coefficent)
 %Inputs
+%B --> Breedt
+%H --> Hoogte
 %VW --> Int,Aantal volumes in de breedte/width richting
 %VH --> Int,aantal volumes in de hoogste
 %v --> materiaal matrix Real \in R(VW x VH) met waarden tussen 0 - 1
-%Q --> warmte productie per m^2 geevalueerd in alle cell state nodes
+%q --> uniforme warmte productie per m^2
 %Cmet --> coefficient van het metaal (de 1 in de v)
-%Cpla --> coefficient van het plastiek (de 0 in de v)   
+%Cpla --> coefficient van het plastiek (de 0 in de v)
 %BC0,BC1,BC2,BC3 --> bijvoorbeeld
 %BC0 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Onder geisoleerde rand
 %BC1 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]]; % Rechter 
@@ -18,7 +20,8 @@
 % volumes en de vierde en laatste waarde in de rij is waarde van de BC
 % zelf.
 
-function [Sol,K] = Harmonic_FVM_NonUniformQ(B,H,VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+function [Sol,K] = FVM(B,H,VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
@@ -34,10 +37,10 @@ dg   = zeros(VW*VH, 1); % Diagonal
 sdg = zeros(VW*VH, 1);  % Subdiagonal
 vwdg = zeros(VW*VH, 1); % VB diagonal
 
-%RHS = ones(VW*VH,1);
+RHS = ones(VW*VH,1);
 
 %temperatuursproductie in de cell
-RHS= reshape(Q,[VW*VH,1])*dx*dy;
+RHS= q*dx*dy*RHS;
 RHS(1:VW,1) = 1/2*RHS(1:VW,1);%OndersteRij %De border elementen zijn slechts 1/2 of 1/4 de grootte
 RHS((VH-1)*VW+1:VH*VW,1) = 1/2*RHS((VH-1)*VW+1:VH*VW,1);%BovensteRij
 RHS(1:VW:VW*VH,1) = 1/2*RHS(1:VW:VW*VH,1);%LinkseRij
