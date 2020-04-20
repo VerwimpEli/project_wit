@@ -62,6 +62,7 @@ title("REL ERR (log-scale)");
 xlabel("X"); ylabel("Y"); zlabel("REL ERROR")
 subplot(2,2,4)
 surf(ERR2); 
+% axis([-inf inf -inf inf -inf -2]);
 title("ABS ERR (log-scale)");
 xlabel("X"); ylabel("Y"); zlabel("ABS ERROR")
 subplot(2,2,2)
