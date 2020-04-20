@@ -37,7 +37,7 @@ _These instructions also work on the linux for windows subsystem._
 #### Compile & build on windows
 _Unless somebody can compile SuiteSparse on windows, the fast UmfLUSolver is linux only. Test fails can be compiled in the same way as the main program.
 Replace CXX by favorite compiler._
-- `CXX -O3 -Wall -I./dependencies/eigen/ -I./src/ -o apps/main_win main.cpp MMASolver.cpp util.cpp BoundaryCondition.cpp` 
+- `CXX -O3 -Wall -I./dependencies/eigen/ -I./src/ -o apps/main_win src/main.cpp src/MMASolver.cpp src/util.cpp src/BoundaryCondition.cpp` 
 
 ### Main programs
 _Note: run programs from within apps folder. Else the results won't be stored correctly_
@@ -64,9 +64,9 @@ Have the same options as main programs, but the first (`max_iterations`) is igno
 Tests are comprised of 2 parts. The first part is matlab code, with the purpose to prove the correctness of the matlab implementation. The second part is part matlab, part c++ and has the goal to prove that both give the same result. This would mean that the c++ code also delivers a correct result.
 
 FIRST PART : The tests are split in to files. The first test the correctness of the Finite volume method.
-These tests are in the 'Harmonic_TestCase_FVM'. More explaintion of these tests is included in the comments of this file.
-The second test is 'Harmonic_TestCase_adjoint' and compares the gradient computed with the adjoint method with a finite difference approximation. 
+These tests are in the 'TestCase_FVM'. More explaintion of these tests is included in the comments of this file.
+The second test is 'TestCase_adjoint' and compares the gradient computed with the adjoint method with a finite difference approximation. 
 
-SECOND PART : in matlab we have 'Harmonic_TestCase_adjoint' and in c++ we use 'fvm_adjoint_test.cpp'.
+SECOND PART : in matlab we have 'TestCase_adjoint' and in c++ we use 'fvm_adjoint_test.cpp'.
 Both generate the temperature solution and the gradient associated with that solution.
 In order to avoid the requirement of matlab, a reference solution is provided. 
