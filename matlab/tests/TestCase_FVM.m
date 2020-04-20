@@ -62,9 +62,11 @@ plot(SOL(:,1)-Sol_Theo'); title("Test Case 2 : verschil tussen  FVM en Theoretis
  %De 2de testcase wordt herhaald met verschillende meshes. Gezien de
  %eigenschappen van de methode zou de parabool telkens exact geinterpoleerd
  %moeten worden %dit is dus gewoon nul berekenen (Met numerieke errors)!
- %1ste orde Convergentie gedrag is het gevolg van dynamische penalty waarde
+ %kort 1ste orde Convergentie gedrag is het gevolg van dynamische penalty waarde
  %(Lineair met mesh/ proportioneel met grootste waarde op diagonaal
  %Test case 2 for different meshes. Result should still be zero for all. 
+ %This is a second order method for a solution which is a second order
+ %polynomial-> exact
 Mesh = 5:5:1500;
 Dx = 1./(Mesh-1);
 Error = zeros(size(Mesh));
@@ -186,15 +188,6 @@ function Sol_Theo = T_theo_neumann(DT1,T2,Q,L,VH,K) %Test Neumann
     x = linspace(0,L,VH);
     Sol_Theo = -Q.*x.*x/2/K + DT1.*x -DT1*L + T2 + Q/2/K*L^2;
 end
-
-% %aanmaken van de matrix Q
-% function Q = CreateForcingMatrix_Q(VB,VH,K,L)
-%     dx = L/(VB-1);
-%     Q = zeros(VB,VH);
-%     for i = 1:VB
-%             Q(i,:) = -90*K*(dx/2 + (i-1)*dx);
-%     end
-% end
 
 %aanmaken van de matrix Q
 function Q = CreateForcingMatrix_Q(VB,VH,K,L)

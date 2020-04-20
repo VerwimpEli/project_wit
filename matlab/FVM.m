@@ -21,7 +21,6 @@
 % zelf.
 
 function [Sol,K] = FVM(B,H,VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
-H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
