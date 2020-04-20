@@ -1,4 +1,7 @@
 clear;
+%In order to run this make sure matlab has acces to the other files aswell
+%by "adding to path" the tests folder 
+
 %Testcase for the testing the adjoint method (used for calculation of the
 %gradient) by comparision with a finite difference approxition. Also used
 %to generate a FVM solution and gradient for comparison with the cpp
@@ -11,6 +14,7 @@ clear;
 %different is cpp. Therefore some difference might be possible for special meshes. 
 %This is not the case for (eg 25x25)
 VH = 25; VW = 25; % Aantal volumes in de hoogte en breedte. Incluisief de kleinere op de randen
+ H = 1; B = 1; %Hoogte en breedte van het domein
 Varray = linspace(0.4,0.6,VW*VH)'; %Equispaced tussen 0.4 en 0.6
 v = reshape(Varray, [VW, VH]);
 
@@ -39,7 +43,7 @@ SOL = reshape(Sol,[VW,VH]);
 % xlabel("X"); ylabel("Y"); zlabel("Temperatuur")
 
 %Benaderen Jacobiaan
-FDG = FD_G(VW,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';
+FDG = FD_G(B,H,VW,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';
 
 %Adjoint
 L = (K')\-scale(ones(VW*VH,1));
@@ -70,7 +74,7 @@ title("Solution");
 xlabel("X"); ylabel("Y"); zlabel("T")
 
 %%%Bereken van de gradient DMV Finite difference
-function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+function J = FD_G(B,H,VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
     Delta = 10^-6;
     J = zeros(size(Varray));
     %Referentie Oplossing

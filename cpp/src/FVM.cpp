@@ -212,7 +212,7 @@ class FVM
 
 
         //AFHANDELEN VD BOUNDARY CONDITIONS
-        S PW = std::pow(10,8); //Penaltywaarde voor de DIRCHLET randvoorwaarden te implementeren met de penalty methode
+        S PW = std::pow(10,7)*(*max_element(diag_.begin(), diag_.end()));//Penaltywaarde voor de DIRCHLET randvoorwaarden te implementeren met de penalty methode
         int beginIndex;
         int endIndex;
         //BC0 - Onders

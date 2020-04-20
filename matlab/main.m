@@ -1,13 +1,19 @@
+%In order to run this make sure matlab has acces to the other files aswell
+%by "adding to path" the optimization folder 
+
+%Script to solve the topology problem. 
+
 % Initalize problem
-VW = 10;
-VH = 10; 
+H = 1; B = 1; %Heigth and width in m
+VW = 10; %Number of volumes in width 
+VH = 10; %Number of volumes in width 
 Q  = 2000;
 Cpla = 0.2;
 Cmet = 65;
 M  = 0.2;   % Metal to plastic ratio
 % v  = rand(VW * VH, 1) * M;
 p = 1;
-pmax = 1;
+pmax = 3;
 v = zeros(VW * VH, 1);
 
 % Boundary Conditions
@@ -50,7 +56,7 @@ d       = 1;
 a0      = 1;
 a       = 0;
 iter    = 0;
-maxiter = 5;
+maxiter = 50;
 kkttol  = 1e-8;
 kktnorm = 1.0;
 

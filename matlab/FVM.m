@@ -3,6 +3,8 @@
 %topolisation/optimasation. elk volume heeft zijn eigen
 %materiaal(coefficent)
 %Inputs
+%B --> Breedt
+%H --> Hoogte
 %VW --> Int,Aantal volumes in de breedte/width richting
 %VH --> Int,aantal volumes in de hoogste
 %v --> materiaal matrix Real \in R(VW x VH) met waarden tussen 0 - 1
@@ -23,7 +25,7 @@ H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
-if nargin < 11
+if nargin < 13
     p = 1;
 end
 MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet; %verschillende paper
@@ -142,7 +144,7 @@ end
 
 %%%%%%%%%%%%%%%BC
 %%%%Boundary conditions onder
-PW= 10^8; %Penaltywaarde
+PW= 10^7*max(dg); %Penaltywaarde
 %Kleine Cell
 if BC0(1,1)=='D'
        k = 1;
