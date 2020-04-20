@@ -32,7 +32,7 @@ Cmet = 65; Cpla = 0.2;
 p = 2;
 
 %Refentie oplossing
-[Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+[Sol,K] = FVM(B, H, VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 
 
 %Visualisatie %Heel ruw komt niet direct overeen met echte systeem door
@@ -47,7 +47,7 @@ FDG = FD_G(B,H,VW,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';
 
 %Adjoint
 L = (K')\-scale(ones(VW*VH,1));
-AG = Adjoint_Gradient(VW,VH,v,L,Sol, p, Cmet, Cpla);
+AG = Adjoint_Gradient(B, H, VW,VH,v,L,Sol, p, Cmet, Cpla);
 
 ERR1 = log10(abs(reshape(AG-FDG,[VW,VH])./reshape(AG+FDG,[VW,VH])/2));
 ERR2 = log10(abs(reshape(AG-FDG,[VW,VH])));
@@ -61,7 +61,8 @@ surf(ERR1);
 title("REL ERR (log-scale)");
 xlabel("X"); ylabel("Y"); zlabel("REL ERROR")
 subplot(2,2,4)
-surf(ERR2); 
+surf(ERR2);
+axis([-inf inf -inf inf -inf -2]);
 title("ABS ERR (log-scale)");
 xlabel("X"); ylabel("Y"); zlabel("ABS ERROR")
 subplot(2,2,2)
@@ -78,12 +79,12 @@ function J = FD_G(B,H,VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
     Delta = 10^-6;
     J = zeros(size(Varray));
     %Referentie Oplossing
-    [Sol, ~, ~, ~] =  heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+    [Sol, ~, ~, ~] =  heateq(Varray, 1, B, H, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
     
     %Loop
     for i = 1:size(Varray,1)
             Varray2 = Varray; Varray2(i) = Varray2(i)*(1+Delta);
-            [FD_Sol, ~, ~, ~] =  heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+            [FD_Sol, ~, ~, ~] =  heateq(Varray2, 1, B, H, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
             J(i)= (FD_Sol - Sol)/(Delta*Varray(i)); %of is dit de gradient?
     end
 end

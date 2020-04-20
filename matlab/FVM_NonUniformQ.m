@@ -6,7 +6,7 @@
 %VW --> Int,Aantal volumes in de breedte/width richting
 %VH --> Int,aantal volumes in de hoogste
 %v --> materiaal matrix Real \in R(VW x VH) met waarden tussen 0 - 1
-%q --> uniforme warmte productie per m^2
+%Q --> warmte productie per m^2 geevalueerd in alle cell state nodes
 %Cmet --> coefficient van het metaal (de 1 in de v)
 %Cpla --> coefficient van het plastiek (de 0 in de v)   
 %BC0,BC1,BC2,BC3 --> bijvoorbeeld
@@ -18,12 +18,11 @@
 % volumes en de vierde en laatste waarde in de rij is waarde van de BC
 % zelf.
 
-function [Sol,K] = FVM_NonUniformQ(VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
-H = 1; B = 1; %Hoogte en breedte van het domein
+function [Sol,K] = FVM_NonUniformQ(B,H,VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 
 %MateriaalArray
-if nargin < 11
+if nargin < 13
     p = 1;
 end
 MatArray = (1 - v) .^ p * Cpla + v .^ p * Cmet; %verschillende paper

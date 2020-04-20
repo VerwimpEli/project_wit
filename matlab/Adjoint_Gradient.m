@@ -1,4 +1,4 @@
-function AG = Adjoint_Gradient(VB,VH,v,L,SOL, p, Cmet, Cpla)%moet synchroon blijven met Bovenstaande Methode
+function AG = Adjoint_Gradient(B,H,VB,VH,v,L,SOL, p, Cmet, Cpla)%moet synchroon blijven met Bovenstaande Methode
 H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VB-1); dy = H/(VH-1); %Cell grotes
 

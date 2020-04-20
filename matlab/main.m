@@ -62,7 +62,7 @@ kktnorm = 1.0;
 
 % Inital 
 v0 = v;
-[f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+[f0val,f0grad,fval,fgrad] = heateq(v, M, B, H, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 fvals = zeros(maxiter, 1);
 symm  = zeros(maxiter, 1);
 fvals(1) = f0val;
@@ -82,7 +82,7 @@ while kktnorm > kkttol && iter < maxiter
     vold1 = v;
     v = vmma;
     
-    [f0val,f0grad,fval,fgrad] = heateq(v, M, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+    [f0val,f0grad,fval,fgrad] = heateq(v, M, B, H, VW, VH, Q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
     fvals(iter+1) = f0val;
     symm(iter+1)  = norm(reshape(v, VW, VH) - flip(reshape(v, VW, VH)), 'fro');
     
@@ -109,9 +109,9 @@ imagesc(flip(v'))
 colorbar;
 
 % Inital temp
-tsol0 = FVM(VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+tsol0 = FVM(B, H, VW, VH, reshape(v0, VW, VH), Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
 % Final temp
-tsol  = FVM(VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
+tsol  = FVM(B, H, VW, VH, v, Q, Cmet, Cpla, BC0, BC1, BC2, BC3);
 
 maxt = max(tsol0);
 mint = min(tsol0);
