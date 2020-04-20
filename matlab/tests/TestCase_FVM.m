@@ -1,7 +1,7 @@
 clear; clc;
 
 %Script dat enkele testen uitvoerd om de correctheid van de functie
-%Harmonic_FVM te testen.
+%FVM te testen.
 %Script for verification of the code.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -19,10 +19,10 @@ clear; clc;
  BC1 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]]; % Rechter 
  BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
  BC3 = [['D',1,1,0];['D',2,VH-1,0];['D',VH,VH,0]];% Linker 
-[Sol,K] = Harmonic_FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+[Sol,K] = FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
  SOL = reshape(Sol,[VB,VH]);
  figure(1); surf(SOL); 
- title("Testcase 1 Harmonic_FVM Stroken verschillend materiaal");
+ title("Testcase 1 FVM Stroken verschillend materiaal");
  
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%                TEST CASE 2 : Parabool                  %%%%%%%%%%
@@ -43,13 +43,13 @@ BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
 BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker 
 
 
-[Sol,K] = Harmonic_FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+[Sol,K] = FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
 SOL = reshape(Sol,[VB,VH]);
-figure(2); surf(SOL); title("Test Case 2 : Parabool gegenereerd door Harmonic_FVM");
+figure(2); surf(SOL); title("Test Case 2 : Parabool gegenereerd door FVM");
 
 Sol_Theo = T_theo(20,20,Q,1,24,65); %Vergelijken met theortisch 
 figure(3);
-plot(SOL(:,1)-Sol_Theo'); title("Test Case 2 : verschil tussen  Harmonic_FVM en Theoretisch profiel");
+plot(SOL(:,1)-Sol_Theo'); title("Test Case 2 : verschil tussen  FVM en Theoretisch profiel");
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %%%%%%%%                TEST CASE 3 : Convergentie van Test Case 2 %%%%%%%
@@ -71,7 +71,7 @@ for i = 1:size(Mesh,2)
     BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
     BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker 
 
-    [Sol,K] = Harmonic_FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+    [Sol,K] = FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
     SOL = reshape(Sol,[Mesh(i),VH]);
     Sol_Theo = T_theo(20,20,Q,1,Mesh(i),65);
     Error(i) = max(abs(SOL(:,1)-Sol_Theo')); %MaxNorm
@@ -96,7 +96,7 @@ BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
 BC3 = [['N',1,1,20];['N',2,VH-1,20];['N',VH,VH,20]];% Linker 
 
 
-[Sol,K] = Harmonic_FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+[Sol,K] = FVM(VB,VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
 SOL = reshape(Sol,[VB,VH]);
 figure(5); surf(SOL); title("TestCase 4 : Voorbeeld van een oplossing");
 
@@ -121,7 +121,7 @@ for i = 1:size(Mesh,2)
     BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
     BC3 = [['N',1,1,20];['N',2,VH-1,20];['N',VH,VH,20]];% Linker 
 
-    [Sol,K] = Harmonic_FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+    [Sol,K] = FVM(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
     SOL = reshape(Sol,[Mesh(i),VH]);
     Sol_Theo = T_theo_neumann(-20/65,20,Q,1,Mesh(i),65);
     Error(i) = max(abs(SOL(:,1)-Sol_Theo')); %MaxNorm
@@ -152,7 +152,7 @@ for i = 1:size(Mesh,2)
     BC2 = [['N',1,1,0];['N',2,VB-1,0];['N',VB,VB,0]]; %Boven geisoleerde rand
     BC3 = [['D',1,1,273];['D',2,VH-1,273];['D',VH,VH,273]];% Linker 
 
-    [Sol,K] = Harmonic_FVM_NonUniformQ(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
+    [Sol,K] = FVM_NonUniformQ(Mesh(i),VH,Varray,Q,65,0.2,BC0,BC1,BC2,BC3);
     SOL = reshape(Sol,[Mesh(i),VH]);
     Sol_Theo = T_theo_poly(Mesh(i),65,1);
     Error(i) = max(abs(SOL(:,1)-Sol_Theo')); %MaxNorm

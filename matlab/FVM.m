@@ -18,7 +18,7 @@
 % volumes en de vierde en laatste waarde in de rij is waarde van de BC
 % zelf.
 
-function [Sol,K] = Harmonic_FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
+function [Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p)
 H = 1; B = 1; %Hoogte en breedte van het domein
 dx = B/(VW-1); dy = H/(VH-1); %Cell grotes
 

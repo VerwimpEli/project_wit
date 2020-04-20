@@ -28,7 +28,7 @@ Cmet = 65; Cpla = 0.2;
 p = 2;
 
 %Refentie oplossing
-[Sol,K] = Harmonic_FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+[Sol,K] = FVM(VW, VH, v, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
 
 
 %Visualisatie %Heel ruw komt niet direct overeen met echte systeem door
@@ -43,34 +43,43 @@ FDG = FD_G(VW,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)';
 
 %Adjoint
 L = (K')\-scale(ones(VW*VH,1));
-AG = Harmonic_Adjoint_Gradient(VW,VH,v,L,Sol, p, Cmet, Cpla);
+AG = Adjoint_Gradient(VW,VH,v,L,Sol, p, Cmet, Cpla);
 
 ERR1 = log10(abs(reshape(AG-FDG,[VW,VH])./reshape(AG+FDG,[VW,VH])/2));
+ERR2 = log10(abs(reshape(AG-FDG,[VW,VH])));
 
-
-figure(2);
-subplot(1,3,1); 
+figure(1);
+subplot(2,2,1); 
 surf(reshape(AG,[VW,VH])); 
 title("AG");
-subplot(1,3,2)
+subplot(2,2,3)
 surf(ERR1); 
-title("10 LOG REL ERR1 TOV AVG");
-xlabel("X"); ylabel("Y"); zlabel("ERROR1")
-subplot(1,3,3)
+title("REL ERR (log-scale)");
+xlabel("X"); ylabel("Y"); zlabel("REL ERROR")
+subplot(2,2,4)
+surf(ERR2); 
+title("ABS ERR (log-scale)");
+xlabel("X"); ylabel("Y"); zlabel("ABS ERROR")
+subplot(2,2,2)
 surf(reshape(FDG,[VW,VH])); 
 title("FDG");
+
+figure(2);
+surf(reshape(Sol,[VW,VH]));
+title("Solution");
+xlabel("X"); ylabel("Y"); zlabel("T")
 
 %%%Bereken van de gradient DMV Finite difference
 function J = FD_G(VB,VH,Varray,q,Cmet, Cpla, BC0, BC1, BC2, BC3, p)
     Delta = 10^-6;
     J = zeros(size(Varray));
     %Referentie Oplossing
-    [Sol, ~, ~, ~] =  Harmonic_heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+    [Sol, ~, ~, ~] =  heateq(Varray, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
     
     %Loop
     for i = 1:size(Varray,1)
             Varray2 = Varray; Varray2(i) = Varray2(i)*(1+Delta);
-            [FD_Sol, ~, ~, ~] =  Harmonic_heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
+            [FD_Sol, ~, ~, ~] =  heateq(Varray2, 1, VB, VH, q, Cmet, Cpla, BC0, BC1, BC2, BC3, p);
             J(i)= (FD_Sol - Sol)/(Delta*Varray(i)); %of is dit de gradient?
     end
 end
