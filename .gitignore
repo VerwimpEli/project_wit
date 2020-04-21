@@ -4,9 +4,14 @@
 cmake-build-debug/
 *.o
 *.out
+
+cpp/results/plot2.py
+cpp/results/plot3.py
+cpp/results/result.*
 cpp/eigen/
 cpp/cmake-build-debug/
 cpp/SuiteSparse-master/
 cpp/mma_depr/
 cpp/old/
 
+./.gitignore

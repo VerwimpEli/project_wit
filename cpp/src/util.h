@@ -28,5 +28,5 @@ void Print(const std::vector<double>& v);
 void Print(double v);
 void Print(double v, std::string name);
 
-
+std::vector<double> interpolate(std::vector<double> const & v, double s);
 #endif //CPP_UTIL_H

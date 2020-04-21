@@ -1,5 +1,3 @@
-//#define TIME false           // Set to false to turn of timings
-
 #include <chrono>
 #include <iostream>
 #include "MMASolver.h"
@@ -11,8 +9,18 @@
 #include <Eigen/Dense>
 #include <fstream>
 #include <numeric>
+#include <iterator>
+#include <vector>
+#include <algorithm>
 
-
+/**
+ * This functor calculates all parameters required for the optimizer.
+ * Given v, it will calculate:
+ *  - f: the value of the objective function as sum(T). See FVM.cpp.
+ *  - df: the gradient of the objective. See adjoint.cpp.
+ *  - g: the value of the constraint: sum(v) - M*n^2.
+ *  - dg: the gradient of the constraint
+ */
 class HeatEq
 {
 public:
@@ -50,6 +58,7 @@ public:
             std::cout << "ADJ took: " << diff.count() << " s" << std::endl;
         #endif
 
+        scale(sol, VW_, sol.size());
         f = std::accumulate(sol.begin(), sol.end(), 0.0);
 
         std::vector<double> vCopy(v);
@@ -59,7 +68,7 @@ public:
         std::fill(dg.begin(), dg.end(), 1.0);
         scale(dg, VW_, dg.size());
     }
-
+    
     void solve_heat_eq(std::vector<double> & v, std::vector<double> & t){
         Eigen::SparseMatrix<double> K(VW_ * VH_, VW_ * VH_);
         fvm(v, t, K);
@@ -82,7 +91,10 @@ private:
 
 };
 
+
 int main(int argc, char *argv[]) {
+
+    auto t_start_full = std::chrono::system_clock::now();
 
     int max_iter, VW, VH;
 
@@ -116,7 +128,17 @@ int main(int argc, char *argv[]) {
     max_iter = 1;
     #endif
 
+//
     std::vector<double> v(VW*VH, 0.0), v_old(v);
+
+//    Read and interpolate old v
+
+//    std::fstream is("../results/result_106_32.out", std::ios::in);
+//    std::istream_iterator<double> start(is), end;
+//    std::vector<double> v_read(start, end);
+//    std::cout << v_read.size() << std::endl;
+//    std::vector<double> v = interpolate(v_read, VW/2), v_old(v);
+//    std::vector<double> v(v_read), v_old(v);
 
     BoundarySegment b1 = BoundarySegment(NEUMANN, 0, 1, 0);
     BoundaryCondition BcBottom(b1);
@@ -167,11 +189,6 @@ int main(int argc, char *argv[]) {
 
 		v_old = v;
 
-        // Update after x iterations. Better for large grids.
-//		if (itr % 50 == 0 && p < p_max){
-//		    heateq.update_p(++p);
-//		}
-
         // Update if objective is not changing and constraint is below threshold
         if (abs((f - f_old)) / n < 1e-4 && g < 1e-2 && p < p_max){
             heateq.update_p(++p);
@@ -179,11 +196,20 @@ int main(int argc, char *argv[]) {
 
         f_old = f;
 #ifndef TIME
-		printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, inf_norm_diff(v, v_old));
+	    heateq(v, f, dg, g, dg);
+
+    printf("it.: %d, obj.: %f, g.: %f, ch.: %f \n",itr, f, g, inf_norm_diff(v, v_old));
 #endif
 	}
 
+    auto t_end_full = std::chrono::system_clock::now();
+    std::chrono::duration<double> diff = t_end_full-t_start_full;
+    std::cout << "Program took: " << diff.count() << " s" << std::endl;
+
+
 #ifndef TIME
+
+    // Write v and t to file
 	std::vector<double> t(n);
 	heateq.solve_heat_eq(v, t);
 
@@ -198,7 +224,7 @@ int main(int argc, char *argv[]) {
 
 	// Write v to file
 	for (int i = 0; i < n -1; i++) {
-	    file << v[i] << ",";
+	    file << v[i];
 	}
 	file << v[n - 1] << "\n";
 
@@ -209,6 +235,7 @@ int main(int argc, char *argv[]) {
     file << t[n - 1] << "\n";
 
 	file.close();
+
 #endif
 	// Deallocate
 	delete mma;

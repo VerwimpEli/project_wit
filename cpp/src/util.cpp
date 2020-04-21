@@ -66,5 +66,33 @@ void Print(double v, std::string name){
     std::cout << name << ":\t" << v << std::endl;
 }
 
+/**
+ * Interpolates v as a 2D grid by averaging the values of the new grid points
+ */
+std::vector<double> interpolate(std::vector<double> const & v, double s) {
+    std::vector<double> v_new(s*s*4, 0);
+    for (int j=0; j<(s-1); j++){
+        for (int i=0; i<(s-1); i++){
+            v_new[2*i + 4*j*s] = v[i + j*s];
+            v_new[2*i+1 + 4*j*s] = (v[i + j*s] + v[i+1 + j*s]) / 2;
+            v_new[2*i + (4*j+2)*s] = (v[i + j*s] + v[i+(j+1)*s]) / 2;
+            v_new[2*i+1 + (4*j+2)*s] = (v[i + j*s] + v[i+1 + j*s] + v[i + (j+1)*s] + v[i+1+(j+1)*s]) / 4;
+
+        }
+        v_new[2 * (s-1) + 2 * j * 2*s] = v[(s-1) + j * s];
+        v_new[2 * (s-1) + 1 + 2 * j * 2*s] = v[(s-1) + j * s];
+        v_new[2 * (s-1) + (2 * j + 1) * 2*s] = (v[(s-1) + j * s] + v[(s-1) + (j+1) * s]) / 2;
+        v_new[2 * (s-1) + 1 + (2 * j + 1) * 2*s] = (v[(s-1) + j * s] + v[(s-1) + (j+1) * s]) / 2;
+    }
+
+    for (int i=0; i<s; i++) {
+        v_new[2*i + 2*(s-1) * 2*s] = v[i + (s-1) * s];
+        v_new[2*i+1 + 2 * (s-1) * 2*s] = (v[i + (s-1) * s] + v[i + 1 + (s-1) * s]) / 2;
+        v_new[2*i + (2 * (s-1) + 1) * 2*s] = v[i + (s-1) * s];
+        v_new[2*i+1 + (2 * (s-1) + 1) * 2*s] = (v[i + (s-1) * s] + v[i + (s-1) * s]) / 2;
+    }
+    return v_new;
+}
+
 #endif
 
