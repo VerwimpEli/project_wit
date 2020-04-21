@@ -373,8 +373,7 @@ class FVM
         {
             RHS_[(VH_-1)*VW_] = RHS_[(VH_-1)*VW_] + BC3_.GetStop().value()*dy_/2;
         }
-
-
+        
         // Constructie van K uit de diagonalen
         K.reserve(Eigen::VectorXi::Constant(VH_*VW_, 5));
         for (int i = 0; i < VW_ * VH_; i++){
@@ -427,15 +426,5 @@ class FVM
         p_ = p;
     }
 };
-
-//Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.
-//De functie houdt rekening met de kleine cell op de rand
-int ratioToIndex(double ratio, int Cells)
-{
-    double dx = 1.0/(Cells-1);
-    if(ratio <= dx/2){ return 0;}
-    else if( ratio >= 1-dx/2){return Cells -1;}
-    else{ return std::floor((ratio-dx/2)/dx) + 1;}
-}
 
 #endif

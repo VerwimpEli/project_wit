@@ -51,4 +51,11 @@ void Print(double v, std::string name);
  * Interpolates a vector v, interpreted as a grid. New grid points are linearly interpolated.
  */
 std::vector<double> interpolate(std::vector<double> const & v, double s);
+
+
+/** Fuc
+ * Function to map relative (0 - 1) Boundary conditions to absolute values, based on the number of Cells.
+ */
+int ratioToIndex(double ratio, int Cells);
+
 #endif //CPP_UTIL_H
