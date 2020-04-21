@@ -5,6 +5,11 @@
 #define  NEUMANN 1
 
 #include <vector>
+
+/**
+ * BoundarySegment is a continuous part of a BC where the conditions don't change.
+ * Requires a type (Neumann/Dirichlet), start, stop and a value.
+ */
 class BoundarySegment {
 public:
     BoundarySegment(int type, float start, float stop, float value);
@@ -23,6 +28,10 @@ private:
     float value_;
 };
 
+/**
+ * Boundary condition, wrapper for multiple BoundarySegments along the same direction.
+ * The first segment should start on 0 and the last should end on 1.
+ */
 class BoundaryCondition {
 public:
     BoundaryCondition(std::vector<BoundarySegment> const s);

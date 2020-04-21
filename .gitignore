@@ -13,5 +13,5 @@ cpp/cmake-build-debug/
 cpp/SuiteSparse-master/
 cpp/mma_depr/
 cpp/old/
-
+cpp/apps/
 ./.gitignore

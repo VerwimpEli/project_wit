@@ -224,7 +224,7 @@ int main(int argc, char *argv[]) {
 
 	// Write v to file
 	for (int i = 0; i < n -1; i++) {
-	    file << v[i];
+	    file << v[i]  << ",";
 	}
 	file << v[n - 1] << "\n";
 

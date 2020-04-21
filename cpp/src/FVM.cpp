@@ -17,56 +17,26 @@
 #include <algorithm> //Transform
 #include "util.h"
 #include "BoundaryCondition.h"
-
 #ifdef UmfLUSolver
 #include <Eigen/UmfPackSupport>
 #endif
 
-//VERVOLG FVM
+/**
+ * FVM functor: calculates the temperature with the finite volume method on a square grid. The material constants
+ * are calculated using a local harmoinc average of v, to prevent checkerboards. A p value is also used to steer
+ * the solutions towards 0's and 1's. The constructor takes the problem specific parameter. There are two () operators,
+ * one will only calculate a solution, the other will also calculate an L vector, which is required by the adjoint
+ * gradient method. This happens here because factorizing of K happens here as well.
+ *
+ * The functors require:
+ * - v: the current solution
+ * - Sol: A place to store the solution
+ * - K: A solution to store the K matrix
+ * optional:
+ * - L: a place to store the solution of KL = -1 for the adjoint.
+ *
+ */
 
-////BESCHRIJVING
-/*  Functor die de finite volume methode geassocieerd met een vierkant domein oplost. De mesh is gebaseerd op gebruikte mesh 
-in de paper. De mesh voor de state en design variabelen zijn het zelfde. Het harmonische gemiddelde is gebruikt voor het 
-berekenen van de materiaal constante op de cell interfaces, omdat het checkerboard pateroon hierdoor vermeden wordt. De mesh 
-begint bij element 1 in de linker onderhoek, element 2 bevind zich rechts, ect. Op het einde van de onderste rij, wordt naar
-de rechterzijde van de op één na onderste rij gesprongen.
-
-*/
-
-///////INPUTS voor initialsatie
-/* 
-H, W :: de Hoogte (H) en Widt (W) van het domein
-VH, VW :: het aantal volumes gebruikt voor het discritiseren van de hoogte (VH) en de breedte (VW)
-v :: std-vector met daarin dit materiaal ratios van 2 materialen in een element, in dezelfde ordening als de mesh
-q :: de uniforme warmte productie van het oppervlak gegeven in w/m²
-Cmet :: coefficient van het metaal/materiaal1 (de 1 in de v)
-Cpla :: coefficient van het plastiek/materiaal2 (de 0 in de v)  
-BC0,BC1,BC2,BC3 --> bijvoorbeeld uit matlab
-BC0 = [['N',1,1,0];['N',2,VW-1,0];['N',VW,VW,0]]; %Onder geisoleerde rand
-BC1 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]]; % Rechter 
-BC2 = [['N',1,1,0];['N',2,VW-1,0];['N',VW,VW,0]]; %Boven geisoleerde rand
-BC3 = [['D',1,1,20];['D',2,VH-1,20];['D',VH,VH,20]];% Linker 
-p :: de simp parameter
-
-// INPUTS voor functie /functor
-v :: 
-K :: Referentie naar spaarse matrix van V
-SOL :: referentie naar solution vector
-*/
-
-//////OUTPUTS NA
-
-//Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.
-//De functie houdt rekening met de kleine cell op de rand
-int ratioToIndex(double ratio, int Cells) //Pass by value
-{
-    double dx = 1.0/(Cells-1);
-    if(ratio <= dx/2){ return 0;}
-    else if( ratio >= 1-dx/2){return Cells -1;}
-    else{ return std::floor((ratio-dx/2)/dx) + 1;}
-}
-
-//FUNCTOR
 template<typename S> //type scalar dat gebruikt wordt voor berekeneningen
 class FVM
 {
@@ -431,9 +401,9 @@ class FVM
         // VW >= 256: Use UmfPackLU. (SuiteSparse etc required). Has multi threading support.
 
         #ifdef UmfLUSolver
-            Eigen::UmfPackLU<Eigen::SparseMatrix<double>> solver;
+        Eigen::UmfPackLU<Eigen::SparseMatrix<double>> solver;
         #else
-            Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
+        Eigen::SimplicialLDLT<Eigen::SparseMatrix<double>> solver;
         #endif
 
         solver.compute(K);
@@ -457,5 +427,15 @@ class FVM
         p_ = p;
     }
 };
+
+//Functie voor het bepalen van een positie op de rand (tussen 0 en 1) naar de index vh element.
+//De functie houdt rekening met de kleine cell op de rand
+int ratioToIndex(double ratio, int Cells)
+{
+    double dx = 1.0/(Cells-1);
+    if(ratio <= dx/2){ return 0;}
+    else if( ratio >= 1-dx/2){return Cells -1;}
+    else{ return std::floor((ratio-dx/2)/dx) + 1;}
+}
 
 #endif

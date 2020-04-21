@@ -12,6 +12,14 @@
 #include <functional>
 #include "Eigen/Sparse"
 
+/**
+ * This functor will calculate the adjoint gradient for the heat problem.
+ * The constructor takes the problem specific parameters. The () operator needs:
+ *  - v: the current solutions
+ *  - L: solution of KL = -1, calculated in FVM
+ *  - Sol: the current temperature solution calculated by FVM
+ *  - AG: a vector to store the result
+ */
 class AdjointGradient {
 
     private:
@@ -41,16 +49,8 @@ class AdjointGradient {
 
         void operator() (std::vector<double> const & v, Eigen::VectorXd & L, std::vector<double> & SOL, std::vector<double> & AG){
 
-
             float dx = W_/(VW_-1);
             float dy = H_/(VH_-1);
-            // for_each(v.begin(), v.end(), [](double i)
-            // {
-            //     1.0-i; 
-            // });
-            // std::transform(v.begin(), v.end(), v.begin(),
-            //    std::bind(std::minus<T>(), std::placeholders::_1, 1));
-            // std::vector<double> MatArray = std::pow(v, 2)*;
 
             std::vector<double> MatArray(v);
             std::vector<double> MatDerArray(v);
