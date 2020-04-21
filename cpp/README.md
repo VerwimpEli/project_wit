@@ -9,6 +9,8 @@ python script here to plot the results
 and its header files.
 - ./test: Source files for the tests and test scripts for cpp are stored here.
 ### Compile & build
+Required libraries: only Eigen for the simple solver, which is included. See specific instructions below for the SuiteSparse solver, which requires installation of open BLAS and Lapack.
+
 The Makefile in this folder is able to build all programs (on Linux). The default compiler is g++ and
 the default options include -O3 and -Wall. These can be changed through the variables CXX and CXXFLAGS.
  There are a couple options:
@@ -35,7 +37,7 @@ _These instructions also work on the linux for windows subsystem._
 - Make script: `make main_umf`
 
 #### Compile & build on windows
-_Unless somebody can compile SuiteSparse on windows, the fast UmfLUSolver is linux only. Test fails can be compiled in the same way as the main program.
+_Unless somebody can compile SuiteSparse on windows, the fast UmfLUSolver is linux only. Test files can be compiled in the same way as the main program.
 Replace CXX by favorite compiler._
 - `CXX -O3 -Wall -I./dependencies/eigen/ -I./src/ -o apps/main_win src/main.cpp src/MMASolver.cpp src/util.cpp src/BoundaryCondition.cpp` 
 
@@ -63,10 +65,10 @@ Have the same options as main programs, but the first (`max_iterations`) is igno
 
 Tests are comprised of 2 parts. The first part is matlab code, with the purpose to prove the correctness of the matlab implementation. The second part is part matlab, part c++ and has the goal to prove that both give the same result. This would mean that the c++ code also delivers a correct result.
 
-FIRST PART : The tests are split in to files. The first test the correctness of the Finite volume method.
-These tests are in the 'TestCase_FVM'. More explaintion of these tests is included in the comments of this file.
-The second test is 'TestCase_adjoint' and compares the gradient computed with the adjoint method with a finite difference approximation. 
+FIRST PART: The tests are split in to files. The first test the correctness of the Finite volume method.
+These tests are in the `TestCase_FVM`. More explaintion of these tests is included in the comments of this file.
+The second test is `TestCase_adjoint` and compares the gradient computed with the adjoint method with a finite difference approximation. 
 
-SECOND PART : in matlab we have 'TestCase_adjoint' and in c++ we use 'fvm_adjoint_test.cpp'.
+SECOND PART: in matlab we have `TestCase_adjoint` and in c++ we use `fvm_adjoint_test.cpp`.
 Both generate the temperature solution and the gradient associated with that solution.
 In order to avoid the requirement of matlab, a reference solution is provided. 
